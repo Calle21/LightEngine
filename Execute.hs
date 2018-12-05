@@ -12,5 +12,5 @@ exec exe = do
   loop exe proc coproc = do
     ic <- getIc proc
 
-getIc :: Processor -> IO Int64
+getIc :: Processor -> IO Word64
 getIc proc = readReg (proc ! 7)

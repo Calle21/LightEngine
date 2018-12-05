@@ -2,7 +2,7 @@ module Util where
 
 import Ubi
 
-type Operation = Int64 -> IO ()
+type Operation = Word64 -> IO ()
 
 binSearch :: C.ByteString -> Array Int (C.ByteString, Operation) -> Maybe Operation
 binSearch s arr = let (lo,hi) = bounds arr
@@ -17,6 +17,25 @@ binSearch s arr = let (lo,hi) = bounds arr
                         LT  -> rec lo (mid - 1)
                         GT  -> rec (mid + 1) hi
 
-boolToInt :: Bool -> Int
+boolToInt :: Bool -> Word64
 boolToInt True = 1
 boolToInt _    = 0
+
+decode :: Word64 -> Word64 -> (Word64, Word64)
+decode amount val = let code = mask amount .&. val
+                        new  = val `shiftR` amount
+                    in (code, new)
+
+decodes :: Word64 -> Word64 -> Word64 -> ([Word64], Word64)
+decodes many amount val = loop [] many val
+  where
+  loop :: [Word64] -> Word64 -> Word64 -> ([Word64], Word64)
+  loop acc 0 val = (reverse acc, val)
+  loop acc n val = let (code,new) = decode amount val
+                   in loop (code : acc) (n - 1) new
+
+listToArray :: [a] -> Array Int a
+listToArray xs = listArray (0,length xs - 1) xs
+
+mask :: Word64 -> Word64
+mask amount = 2 ^ amount - 1
