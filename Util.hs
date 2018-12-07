@@ -17,6 +17,9 @@ binSearch s arr = let (lo,hi) = bounds arr
                         LT  -> rec lo (mid - 1)
                         GT  -> rec (mid + 1) hi
 
+bitSet :: Bits a => a -> Int -> Bool -> a
+bitSet b n v = (if v then setBit else clearBit) b n
+
 boolToInt :: Bool -> Word64
 boolToInt True = 1
 boolToInt _    = 0
