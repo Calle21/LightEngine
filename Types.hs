@@ -1,8 +1,8 @@
 module Types where
 
-type Operation = Processor -> RAM -> IO ()
+type Operation = Processor -> IO ()
 
-type Processor = Array Int Register
+type Processor = (RAM, RAM, RAM)
 
 type RAM = Array Int Register
 

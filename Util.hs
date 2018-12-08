@@ -37,6 +37,10 @@ decodes many amount val = loop [] many val
   loop acc n val = let (code,new) = decode amount val
                    in loop (code : acc) (n - 1) new
 
+intToBool :: Int -> Bool
+intToBool 0 = False
+intToBool 1 = True
+
 listToArray :: [a] -> Array Int a
 listToArray xs = listArray (0,length xs - 1) xs
 
