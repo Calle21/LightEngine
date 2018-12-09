@@ -1,9 +1,18 @@
-module Types where
+module Types (
+           module Types
+         , module Types.BinTree
+            ) where
+
+import Data.BinTree
+
+type Machine = Array Int Processor
 
 type Operation = Processor -> IO ()
 
-type Processor = (RAM, RAM, RAM)
+type Processor = (RAM, RAM, RAM, RAM)
 
-type RAM = Array Int Register
+type RAM = BinTree Register
 
-type Register = Array Int (IORef Bool)
+type Register = Array Int Transistor
+
+type Transistor = IORef Bool

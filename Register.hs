@@ -13,7 +13,7 @@ readReg reg = loop 0
   loop 20 = return 0
   loop n  = do next <- (`shiftL` 1) <$> loop (n + 1)
                val  <- readIORef (reg ! n)
-               return (next + boolToInt val)
+               return $ next .&. fromEnum val
 
 writeReg :: Register -> Word32 -> IO ()
 writeReg reg val = loop val 0

@@ -1,8 +1,7 @@
 module Util where
 
+import qualified Data.ByteString.Char8 as C
 import Ubi
-
-type Operation = Word32 -> IO ()
 
 binSearch :: C.ByteString -> Array Int (C.ByteString, Operation) -> Maybe Operation
 binSearch s arr = let (lo,hi) = bounds arr
@@ -19,10 +18,6 @@ binSearch s arr = let (lo,hi) = bounds arr
 
 bitSet :: Bits a => a -> Int -> Bool -> a
 bitSet b n v = (if v then setBit else clearBit) b n
-
-boolToInt :: Bool -> Word32
-boolToInt True = 1
-boolToInt _    = 0
 
 decode :: Word32 -> Word32 -> (Word32, Word32)
 decode amount val = let code = mask amount .&. val

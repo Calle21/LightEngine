@@ -6,6 +6,7 @@ module Ubi (
         , module Data.IORef
         , module Data.Tuple
         , module Data.Word
+        , module System.Random
             ) where
 
 import Control.Monad (
@@ -26,4 +27,6 @@ import Data.Tuple (
                     swap
                    )
 
-improt Data.Word
+import Data.Word
+
+import System.Random (randomIO)
