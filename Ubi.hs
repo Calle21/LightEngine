@@ -1,18 +1,16 @@
 module Ubi (
-          module Control.Monad
-        , module Data.Array
-        , module Data.Bits
-        , module Data.Int
-        , module Data.IORef
-        , module Data.Tuple
-        , module Data.Word
-        , module System.Random
+         module Control.Monad
+       , module Data.Array
+       , module Data.Bits
+       , module Data.Int
+       , module Data.IORef
+       , module Data.Word
+       , module Unsafe.Coerce
             ) where
 
 import Control.Monad (
-                       liftM
-                     , replicateM
-                     , replicateM_
+                      liftM2
+                    , replicateM
                       )
 
 import Data.Array
@@ -23,10 +21,8 @@ import Data.Int
 
 import Data.IORef
 
-import Data.Tuple (
-                    swap
-                   )
-
 import Data.Word
 
-import System.Random (randomIO)
+import Unsafe.Coerce (
+                      unsafeCoerce
+                      )

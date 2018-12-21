@@ -1,18 +1,21 @@
-module Types (
-           module Types
-         , module Types.BinTree
-            ) where
+module Types where
 
-import Data.BinTree
+import Ubi
 
-type Machine = Array Int Processor
+data Executable = Executable Int RAM
 
-type Operation = Processor -> IO ()
+data Mode = Raw | Easy
 
-type Processor = (RAM, RAM, RAM, RAM)
+type Operation = Mode -> Set -> Stack -> Processor -> RAM -> Int32 -> IO Signal
 
-type RAM = BinTree Register
+data Processor = Processor Int Regs
 
-type Register = Array Int Transistor
+type RAM = Array Int Reg
 
-type Transistor = IORef Bool
+type Reg = IORef Int32
+
+type Regs = Array Int Reg
+
+data Signal = Continue | Exit
+
+data Stack = Stack (IORef Int) (Array Int (IORef Processor))

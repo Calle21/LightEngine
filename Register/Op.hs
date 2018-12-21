@@ -1,144 +1,119 @@
 module Register.Op where
 
+import qualified Transistor as T
 import Types
 import Ubi
 import Util
 
 add :: Register -> Register -> Register -> IO ()
-add r0 r1 des = loop False 0
+add r0 r1 des = loop False (reverse r0) (reverse r1) (reverse des)
   where
-  loop :: Bool -> Int -> IO ()
-  loop _ 20 = return ()
-  loop c i  = do a <- readIORef (r0 ! i)
-                 b <- readIORef (r1 ! i)
-                 let (r,c') = count a b c ! listArray (0,3) [(False,False),(True,False),(False,True),(True,True)]
-                 writeIORef (des ! i) r
-                 loop c' (i + 1)
+  loop :: Bool -> Register -> Register -> Register -> IO ()
+  loop _     []     []      _     = return ()
+  loop carry xs     []     zs     = (if carry then inc xs else return ()) >> mov xs zs
+  loop carry []     ys     zs     = (if carry then inc ys else return ()) >> mov ys zs
+  loop carry (x:xs) (y:ys) (z:zs) = do a <- readIORef x
+                                       b <- readIORef y
+                                       let (r,carry') = count a b carry ! listArray (0,3) [(False,False),(True,False),(False,True),(True,True)]
+                                       writeIORef z r
+                                       loop carry' xs ys zs
     where
-    count a b c = boolToInt a + boolToInt b + boolToInt c
+    count a b c = fromEnum a + fromEnum b + fromEnum c
 
 and :: Register -> Register -> Register -> IO ()
-and r0 r1 des = loop 0
-  where
-  loop 20 = return ()
-  loop i  = do a <- readIORef (r0 ! i)
-               b <- readIORef (r1 ! i)
-               writeIORef (des ! i) (a && b)
-               loop (i + 1)
+and []     _      _      = return ()
+and (x:xs) (y:ys) (z:zs) = T.and x y z >> and xs ys zs
+
+cmp :: Register -> Register -> IO Ordering
+cmp []     _      = return EQ
+cmp (x:xs) (y:ys) = do a <- readIORef x
+                       b <- readIORef y
+                       case compare a b of
+                         LT  -> return LT
+                         EQ  -> cmp xs ys
+                         GT  -> return GT
 
 dec :: Register -> IO ()
-dec r = loop 0
+dec r = loop (reverse r)
   where
-  loop :: Int -> IO ()
-  loop 20 = return ()
-  loop i  = do b <- readIORef (r ! i)
-               if b then writeIORef (r ! i) False
-                    else writeIORef (r ! i) True >> loop (i + 1)
+  loop :: Register -> IO ()
+  loop []     = return ()
+  loop (x:xs) = do b <- readIORef x
+                   if b then writeIORef x False
+                        else writeIORef x True >> dec xs
 
 eq :: Register -> Register -> IO Bool
-eq r0 r1 = loop 0
-  where
-  loop :: Int -> IO Bool
-  loop 20 = return True
-  loop i  = do b0 <- readIORef (r0 ! i)
-               b1 <- readIORef (r1 ! i)
-               if b0 == b1 then loop (i + 1)
-                           else return False
+eq []     _      = return True
+eq (x:xs) (y:ys) = do b0 <- readIORef x
+                      b1 <- readIORef y
+                      if b0 == b1 then eq xs ys
+                                  else return False
 
 even :: Register -> IO Bool
-even r = not `fmap` readIORef (r ! 0)
+even r = not `fmap` readIORef (last r)
 
 ez :: Register -> IO Bool
-ez r = loop 0
-  where
-  loop :: Int -> IO Bool
-  loop 20 = return True
-  loop i  = do b <- readIORef (r ! i)
+ez []     = return True
+ez (x:xs) = do b <- readIORef x
                if b then return False
-                    else loop (i + 1)
+                    else loop xs
 
 ge :: Register -> Register -> IO Bool
-ge r0 r1 = loop 0
-  where
-  loop :: Int -> IO Bool
-  loop 20 = return True
-  loop i  = do b0 <- readIORef (r0 ! i)
-               b1 <- readIORef (r1 ! i)
-               case compare b0 b1 of
-                 GT  -> return True
-                 EQ  -> loop (i + 1)
-                 LT  -> return False
+ge []     _      = return True
+ge (x:xs) (y:ys) = do b0 <- readIORef x
+                      b1 <- readIORef y
+                      case compare b0 b1 of
+                        GT  -> return True
+                        EQ  -> ge xs ys
+                        LT  -> return False
 
 gt :: Register -> Register -> IO Bool
-gt r0 r1 = loop 0
-  where
-  loop :: Int -> IO Bool
-  loop 20 = return False
-  loop i  = do b0 <- readIORef (r0 ! i)
-               b1 <- readIORef (r1 ! i)
-               case compare b0 b1 of
-                 GT  -> return True
-                 EQ  -> loop (i + 1)
-                 LT  -> return False
+gt []     _      = return False
+gt (x:xs) (y:ys) = do b0 <- readIORef x
+                      b1 <- readIORef y
+                      case compare b0 b1 of
+                        GT  -> return True
+                        EQ  -> gt xs ys
+                        LT  -> return False
 
 inc :: Register -> IO ()
-inc r = loop 0
+inc r = loop (reverse r)
   where
-  loop :: Int -> IO ()
-  loop 20 = return ()
-  loop i  = do b <- readIORef (r ! i)
-               if b then writeIORef (r ! i) False >> loop (i + 1)
-                    else writeIORef (r ! i) True
+  loop []     = return ()
+  loop (x:xs) = do b <- readIORef x
+                   if b then writeIORef x False >> loop xs
+                        else writeIORef x True
 
-
-mov :: Register -> Register -> IO ()
-mov r des = loop 0
-  where
-  loop 20 = return ()
-  loop i  = do a <- readIORef (r0 ! i)
-               writeIORef (des ! i) a
-               loop (i + 1)
+mov :: Register -> Register -> IO Register
+mov []     []     = return []
+mov xs     []     = return xs
+mov []     (y:ys) = writeIORef y False >> mov [] ys
+mov (x:xs) (y:ys) = readIORef x >>= writeIORef y >> mov xs ys
 
 not :: Register -> Register -> IO ()
-not r des = loop 0
-  where
-  loop 20 = return ()
-  loop i  = do a <- readIORef (r0 ! i)
-               writeIORef (des ! i) (not a)
-               loop (i + 1)
+not []     _      = return ()
+not (x:xs) (y:ys) = T.not x y >> not xs ys
 
 odd :: Register -> IO Bool
-odd r = readIORef (r ! 0)
+odd r = readIORef (last r)
 
 or :: Register -> Register -> Register -> IO ()
-or r0 r1 des = loop 0
-  where
-  loop 20 = return ()
-  loop i  = do a <- readIORef (r0 ! i)
-               b <- readIORef (r1 ! i)
-               writeIORef (des ! i) (a || b)
-               loop (i + 1)
+or []     _      _      = return ()
+or (x:xs) (y:ys) (z:zs) = T.or x y z >> or xs ys zs
 
 sub :: Register -> Register -> Register -> IO ()
-sub r0 r1 des = loop False 0
+sub r0 r1 des = loop False (reverse r0) (reverse r1) des
   where
-  loop :: Bool -> Int -> IO ()
-  loop _ 20 = return ()
-  loop c i  = do a <- readIORef (r0 ! i)
-                 b <- readIORef (r1 ! i)
-                 let (r,c') = count a b c ! listArray (-2,1) [(False,True),(True,True),(False,False),(True,False)]
-                 writeIORef (des ! i) r
-                 loop c' (i + 1)
+  loop :: Bool -> Register -> Register -> Register -> IO ()
+  loop _     []     _      _      = return ()
+  loop carry (x:xs) (y:ys) (z:zs) = do a <- readIORef x
+                                       b <- readIORef y
+                                       let (r,carry') = count a b carry ! listArray (-2,1) [(False,True),(True,True),(False,False),(True,False)]
+                                       writeIORef z r
+                                       loop carry' xs ys zs
     where
-    count a b c = boolToInt a - boolToInt b - boolToInt c
+    count a b c = fromEnum a - fromEnum b - fromEnum c
 
 xor :: Register -> Register -> Register -> IO ()
-xor r0 r1 des = loop 0
-  where
-  loop 20 = return ()
-  loop i  = do a <- readIORef (r0 ! i)
-               b <- readIORef (r1 ! i)
-               writeIORef (des ! i) (count a b == 1)
-               loop (i + 1)
-    where
-    count a b = boolToInt a + boolToInt b
+xor []     _      _      = return ()
+xor (x:xs) (y:ys) (z:zs) = T.xor x y z >> xor xs ys zs
