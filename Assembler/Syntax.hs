@@ -16,7 +16,10 @@ branches = listArray (0,7) (map C.pack ["al"
                                       , "gt"
                                       , "gti"]
 
-branchSyntax, commentSyntax, numberSyntax, labelSyntax, opSyntax, parSyntax :: C.ByteString -> Bool
+branchSyntax, commentSyntax, minusSyntax
+  numberSyntax, labelSyntax, offsetSyntax
+    opSyntax, parSyntax,
+      plusSyntax :: C.ByteString -> Bool
 
 branchSyntax s = isJust $ s `elemIndex'` branches
 
@@ -24,7 +27,11 @@ commentSyntax s = s == C.pack "--"
 
 labelSyntax = not . branchSyntax &&& not . opSyntax &&& not . parSyntax &&& C.all isLabChar
 
+minusSyntax s = s == C.pack "-"
+
 numberSyntax s = C.unpack s =~ "^(-?[0-9]+)?\\[[0-9]+\\]$"
+
+offsetSyntax s = C.unpack s =~ "^[0-9]+$"
 
 opcode :: C.ByteString -> Maybe Int
 opcode s = s `elemIndex'` opcodes
@@ -59,8 +66,10 @@ opSyntax s = isJust $ s `elemIndex'` opcodes
 
 parSyntax s = s == (C.pack "par")
 
+plusSyntax s = s == (C.pack "+")
+
 punctChar c = c == ','
 
-tokChar c = isLabChar c || c == '[' || c == ']' || c == '-'
+tokChar c = isLabChar c || c == '[' || c == ']' || c == '-' || c == '+'
 
 whiteSpace c = c == ' ' || c == '\t'

@@ -8,9 +8,12 @@ data Token = Branch Int32
            | Comma
            | Comment
            | Label Int32
+           | Minus
            | Number Int Int32
+           | Offset Int32
            | Op Int32
            | Par
+           | Plus
 
 read' :: [(C.ByteString,Int)] -> C.ByteString -> [Int32]
 read' symbolTable = loop 1
@@ -32,11 +35,13 @@ read' symbolTable = loop 1
       checkOp _            = readError ln (C.pack "Expected lone label or op at beginning of line")
         where
         checkArgs :: [Token] -> [Token]
-        checkArgs (x:Comma:xs) = x : checkArgs xs
-        checkArgs (_:_:_)      = readError ln (C.pack "Expected a comma")
-        checkArgs [Comma]      = readError ln (C.pack "Comma at end of line")
-        checkArgs [x]          = [x]
-        checkArgs []           = []
+        checkArgs (x:Comma:xs)                   = x : checkArgs xs
+        checkArgs (Label addr:Plus:Offset i:xs)  = checkArgs (Num (addr + i) 20 : xs)
+        checkArgs (Label addr:Minus:Offset i:xs) = checkArgs (Num (addr - i) 20 : xs)
+        checkArgs (_:_:_)                        = readError ln (C.pack "Bad syntax")
+        checkArgs [Comma]                        = readError ln (C.pack "Comma at end of line")
+        checkArgs [x]                            = [x]
+        checkArgs []                             = []
     concatenateToks :: [Token] -> Int32
     concatenateToks toks = let raw = map toNumber toks
                            in if sumOn (\Number _ size -> size) raw == 32
@@ -64,15 +69,17 @@ read' symbolTable = loop 1
                                        t | branchSyntax ts  = Branch $ fromJust (branch ts)
                                          | commentSyntax ts = Comment
                                          | labelSyntax  ts  = case ts `lookup` symbolTable of
-                                                                Nothing   -> readError ln (C.pack "No function with that name")
+                                                                Nothing   -> readError ln (C.pack "That label not in symbol table")
                                                                 Just addr -> Label addr
                                          | numberSyntax ts  = let (num,ts') = case C.readInt ts of
                                                                                 Nothing -> (0,ts)
                                                                                 j       -> fromJust j
                                                                   (size,_)  = fromJust (C.readInt (C.tail ts'))
                                                               in Number num size
+                                         | offsetSyntax ts  = fromIntegral $ fst $ fromJust $ C.readInt ts
                                          | opSyntax ts      = Op $ fromJust (opcode ts)
                                          | parSyntax ts     = Par
+                                         | plusSyntax ts    = Plus
                                          | otherwise        = readError ln (C.pack "Bad token")
                                    in case t of
                                         Comment -> (Nothing, C.tail (C.dropWhile (/='\n') s''))
