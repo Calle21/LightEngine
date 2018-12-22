@@ -12,14 +12,21 @@ branches = listArray (0,7) (map C.pack ["al"
                                       , "eqi"
                                       , "ez"
                                       , "ge"
+                                      , "gef"
                                       , "gei"
+                                      , "geu"
                                       , "gt"
-                                      , "gti"]
+                                      , "gtf"
+                                      , "gti"
+                                      , "gtu"
+                                      , "gtz"
+                                      , "lei"
+                                      , "lti"
+                                      , "ltz"]
 
 branchSyntax, commentSyntax, minusSyntax
   numberSyntax, labelSyntax, offsetSyntax
-    opSyntax, parSyntax,
-      plusSyntax :: C.ByteString -> Bool
+    opSyntax, plusSyntax :: C.ByteString -> Bool
 
 branchSyntax s = isJust $ s `elemIndex'` branches
 
@@ -41,7 +48,6 @@ opcodes = listArray (0,63) (map C.pack ["add"
                                       , "and"
                                       , "branch"
                                       , "call"
-                                      , "callpar"
                                       , "cmpjmp"
                                       , "decr"
                                       , "incr"
@@ -64,11 +70,9 @@ opcodes = listArray (0,63) (map C.pack ["add"
 
 opSyntax s = isJust $ s `elemIndex'` opcodes
 
-parSyntax s = s == (C.pack "par")
-
 plusSyntax s = s == (C.pack "+")
 
-punctChar c = c == ','
+ -- punctChar c = c == ',' || c == '.'
 
 tokChar c = isLabChar c || c == '[' || c == ']' || c == '-' || c == '+'
 
