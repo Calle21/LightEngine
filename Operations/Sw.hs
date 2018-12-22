@@ -2,15 +2,16 @@ module Operations.Sw where
 
 import Types
 import Ubi
-import Util (getReg)
+import Util (getReg, signed, unsigned)
 
 sw :: Operation
-sw mode set _ (Processor _ regs) ram arg = do
+sw _ mode set _ (Processor _ regs) ram arg = do
   let addr   = arg `shiftR` 20
-      dest   = mask 5 .&. (arg `shiftR` 15)
+      dest   = unsigned 5 $ arg `shiftR` 15
       offset = signed 15 arg
   addr' <- getReg addr mode set regs
   addr'' <- readIORef addr'
   dest' <- getReg dest mode set regs
   dest'' <- readIORef (proc ! dest)
   writeIORef (ram ! (dest'' + offset)) addr''
+  return Continue

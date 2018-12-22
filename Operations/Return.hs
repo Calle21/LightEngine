@@ -1,8 +1,7 @@
 module Operations.Return where
 
 import Types
-import Ubi
 
 return' :: Operation
-return' procs (Processor i regs) ram arg = do ...
+return' _ mode set procs (Processor i regs) ram arg = do ...
                           

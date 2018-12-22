@@ -7,6 +7,7 @@ import Util
 data Token = Branch Int32
            | Comma
            | Comment
+           | Firm Int32
            | Label Int32
            | Minus
            | Number Int32 Int
@@ -52,7 +53,8 @@ read' filename -> symbolTable = loop 1
       toNumber (Branch n)      = Number n 4
       toNumber n@(Number _ _ ) = n
       toNumber (Label addr)    = Number addr 20
-      toNumber _            = readError filename ln (C.pack "Bad token (expected branch type, num or label)")
+      toNumber (Firm n)        = Number n 4
+      toNumber _               = readError filename ln (C.pack "Bad token (expected branch type, num, label or firmware code)")
     dropEmptyLines :: Int -> C.ByteString -> (C.ByteString, Int)
     dropEmptyLines dropped s = let (t,s') = getNextTokenOnLine s
                                in case t of
@@ -70,6 +72,7 @@ read' filename -> symbolTable = loop 1
                               else let (ts,s'') = C.span tokChar s'
                                        t | branchSyntax ts  = Branch $ fromJust (branch ts)
                                          | commentSyntax ts = Comment
+                                         | firmSyntax ts    = Firm $ fromJust (firmCode ts)
                                          | labelSyntax  ts  = case ts `lookup` symbolTable of
                                                                 Nothing   -> readError filename ln (C.pack "That label not in symbol table")
                                                                 Just addr -> Label addr

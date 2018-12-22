@@ -2,11 +2,12 @@ module Operations.Lwi where
 
 import Types
 import Ubi
-import Util (getReg)
+import Util (getReg, unsigned)
 
 lwi :: Operation
-lwi mode set _ (Processor _ regs) ram arg = do
+lwi _ mode set _ (Processor _ regs) ram arg = do
   let dest = arg `shiftR` 20
-      addr = mask 20 .&. arg
+      addr = unsigned 20 arg
   dest' <- getReg dest mode set regs
   writeIORef dest' =<< readIORef (ram ! addr)
+  return Continue

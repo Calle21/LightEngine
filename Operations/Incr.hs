@@ -5,6 +5,7 @@ import Ubi
 import Util (getReg)
 
 incr :: Operation
-incr mode set _ (Processor _ regs) _ arg = do let reg = arg `shiftR` 20
-                                              reg' <- getReg reg mode set regs
-                                              modifyIORef reg' succ
+incr _ mode set _ (Processor _ regs) _ arg = do let reg = arg `shiftR` 20
+                                                reg' <- getReg reg mode set regs
+                                                modifyIORef reg' succ
+                                                return Continue

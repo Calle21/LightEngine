@@ -6,6 +6,7 @@ module Ubi (
        , module Data.IORef
        , module Data.List
        , module Data.Maybe
+       , module Data.Word
        , module Unsafe.Coerce
             ) where
 
@@ -30,6 +31,8 @@ import Data.Maybe (
                    fromJust
                  , isJust
                    )
+
+import Data.Word
 
 import Unsafe.Coerce (
                       unsafeCoerce

@@ -32,6 +32,13 @@ branches = listArray (0,15) (map C.pack ["al"
                                        , "lti"
                                        , "ltz"]
 
+firmCode s = s `elemIndex'` firmCodes
+
+firmCodes = listArray (0,31) (map C.pack ["putChar"
+                                        , "putInt"
+                                        , "putFloat"
+                                        , "putAddress"]
+
 opcode s = s `elemIndex'` opcodes
 
 opcodes = listArray (0,63) (map C.pack ["add"
@@ -41,6 +48,7 @@ opcodes = listArray (0,63) (map C.pack ["add"
                                       , "call"
                                       , "cmpjmp"
                                       , "decr"
+                                      , "firm"
                                       , "incr"
                                       , "li"
                                       , "lw"
@@ -62,12 +70,14 @@ reserved s = branchSyntax s || opSyntax s
 
  -- Token syntax
 
-branchSyntax, commentSyntax, labelSyntax, minusSyntax,
+branchSyntax, commentSyntax, firmSyntax, labelSyntax, minusSyntax,
   numberSyntax, offsetSyntax, opSyntax, plusSyntax :: C.ByteString -> Bool
 
 branchSyntax s = isJust $ s `elemIndex'` branches
 
 commentSyntax s = s == C.pack "--"
+
+firmSyntax s = isJust $ s `elemIndex'` firmCodes
 
 labelSyntax s = not reserved s && C.unpack s =~ "^[a-zA-Z_][a-zA-Z_0-9]*$"
 

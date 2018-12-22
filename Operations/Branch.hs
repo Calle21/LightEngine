@@ -1,37 +1,50 @@
 module Operations.Branch (branch) where
 
-import Operations.Templates (compareImm, compareReg)
+import Operations.Templates (compareImm, compareOne, compareTwo)
 import Types
 import Ubi
-import Util (getReg)
+import Util (getReg, signed, unsigned)
 
 branch :: Operation
-branch mode set procs proc ram arg = branches ! (arg `shiftR` 22) $ mode set procs proc ram (unsigned 22 arg)
+branch par mode set procs proc ram arg =
+  let fn = if arg `shiftR` 24 > 0 then not else id
+  in branches ! fromIntegral (unsigned 4 $ arg `shiftR` 20) $ fn par mode set procs proc ram (unsigned 20 arg)
 
  -- Variations
 
-branches = listArray (0,7) [al,eq,eqi,ez,ge,gei,gt,gti]
+branches = listArray (0,15) [al,eq,eqi,ez,ge,gef,gei,geu,gt,gtf,gti,gtu,gtz,lei,lti,ltz]
 
-al, eq, eqi, ez, ge, gei, gt, gti :: Operation
+al, eq, eqi, ez, ge, gef, gei, geu, gt, gtf, gti, gtu, gtz, lei, lti, ltz :: (Bool -> Bool) -> Operation
 
-al _ _ _ (Processor _ regs) _ arg = do modifyIORef (regs ! 31) (+ signed 22 arg)
+al fn _ _ _ _ (Processor _ regs) _ arg = if fn True then modifyIORef (regs ! 31) (+ signed 20 arg)
+                                                    else return Continue
 
-eq = compareReg (==)
+eq = compareTwo (==)
 
 eqi = compareImm (==)
 
-ez mode set _ (Processor _ regs) _ arg = do
-  let reg  = arg `shiftR` 17
-      jump = signed 17 arg
-  reg' <- getReg reg mode set regs
-  reg'' <- readIORef reg'
-  if reg'' == 0 then modifyIORef (proc ! 31) (+ jump)
-                else return ()
+ez = compareOne (==0)
 
-ge = compareReg (>=)
+ge = compareTwo (>=)
+
+gef = compareTwo \i0 i1 -> (unsafeCoerce i0 :: Float) >= (unsafeCoerce i1 :: Float)
 
 gei = compareImm (>=)
 
-gt = compareReg (>)
+geu = compareTwo \i0 i1 -> (fromIntegral i0 :: Word32) >= (fromIntegral i1 :: Word32)
+
+gt = compareTwo (>)
+
+gtf = compareTwo \i0 i1 -> (unsafeCoerce i0 :: Float) > (unsafeCoerce i1 :: Float)
 
 gti = compareImm (>)
+
+gtu = compareTwo \i0 i1 -> (fromIntegral i0 :: Word32) > (fromIntegral i1 :: Word32)
+
+gtz = compareOne (>0)
+
+lei = compareImm (<=)
+
+lti = compareImm (<)
+
+ltz = compareOne (<0)
