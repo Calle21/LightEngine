@@ -1,7 +1,7 @@
 module Assembler.Write where
 
 import Control.Exception (bracket)
-import System.IO (WriteMode)
+import System.IO (AbsoluteSeek, hClose, hPutStr, hSeek, WriteMode)
 import Ubi
 import Util
 
@@ -9,7 +9,8 @@ writeLexed :: FilePath -> [[Int32]] -> IO ()
 writeLexed path files = bracket
                           (openFile path WriteMode)
                           hClose
-                          (\handle -> mapM_ (hPutStr path . concatMap chopIt) files)
+                          (\handle -> do hSeek handle AbsoluteSeek 4000
+                                         mapM_ (hPutStr handle . concatMap chopIt) files)
   where
   chopIt :: Int32 -> [Char]
   chopIt w = [conv $ w `shiftR` 24, conv $ unsigned 8 (w `shiftR` 16), conv $ unsigned 8 (w `shiftR` 8), conv $ unsigned 8 w]

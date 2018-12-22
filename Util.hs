@@ -15,6 +15,10 @@ getReg :: Int32 -> Mode -> Set -> Regs -> IO Reg
 getReg i Raw _ regs = return $ regs ! i
 getReg i Easy set _ = readIORef $ set ! i
 
+map2 :: (a -> b -> c) -> [a] -> [b] -> [c]
+map2 _  []     []     = []
+map2 fn (x:xs) (y:ys) = fn x y : map2 fn xs ys
+
 mask :: Int -> Int32
 mask amount = 2 ^ amount - 1
 
@@ -30,6 +34,10 @@ push :: Processor -> Pool -> IO ()
 push proc (Pool n arr) = do n' <- readIORef n
                              writeIORef (arr ! n') proc
                              modifyIORef n succ
+
+putFirst :: a -> [a] -> [a]
+putFirst elt xs | elt `elem` xs = elt : delete elt xs
+                | otherwise     = xs
 
 safeTail' :: C.ByteString -> C.ByteString
 safeTail' s | C.null s  = s

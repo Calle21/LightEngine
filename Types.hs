@@ -2,7 +2,7 @@ module Types where
 
 import Ubi
 
-data Executable = Executable Int RAM
+newtype Executable = Executable RAM
 
 data Mode = Raw | Easy deriving (Enum)
 

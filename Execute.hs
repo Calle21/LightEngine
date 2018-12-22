@@ -6,10 +6,10 @@ import Ubi
 import Util (pop, push)
 
 execute :: Executable -> IO ()
-execute (Executable entry ram) = do
+execute (Executable ram) = do
   procs <- liftM2 Pool (newIORef 4) (listArray (0,3) `fmap` mapM makeProcessor [0..3])
   proc <- pop procs
-  writeIORef (proc ! 31) entry
+  writeIORef (proc ! 31) 1000
   run proc procs ram
   where
   makeProcessor :: Int -> IO Processor

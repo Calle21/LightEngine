@@ -16,8 +16,8 @@ data Token = Branch Int32
            | Par
            | Plus
 
-read' :: String -> [(C.ByteString,Int)] -> C.ByteString -> [Int32]
-read' filename -> symbolTable = loop 1
+read' :: [(C.ByteString,Int)] -> String -> C.ByteString -> [Int32]
+read' symbolTable filename = loop 1
   where
   loop :: Int -> C.ByteString -> [Int32]
   loop ln s = let (s',dropped) = dropEmptyLines 1 s

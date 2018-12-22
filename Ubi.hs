@@ -24,7 +24,9 @@ import Data.Int
 import Data.IORef
 
 import Data.List (
-                  foldl'
+                  delete
+                , foldl'
+                , scanl'
                   )
 
 import Data.Maybe (
