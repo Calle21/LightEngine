@@ -1,46 +1,37 @@
 module Assembler.Syntax where
 
+import qualified Data.ByteString.Char8 as C
 import Text.Regex.PCRE((=~))
 import Ubi
-import Util
 
-branch :: C.ByteString -> Maybe Int
+ -- Char
+
+tokChar :: Char -> Bool
+tokChar c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '[' || c == ']' || c == '-' || c == '+'
+
+ -- Reserved
+
+branch, opcode :: C.ByteString -> Maybe Int
+
 branch s = s `elemIndex'` branches
 
-branches = listArray (0,7) (map C.pack ["al"
-                                      , "eq"
-                                      , "eqi"
-                                      , "ez"
-                                      , "ge"
-                                      , "gef"
-                                      , "gei"
-                                      , "geu"
-                                      , "gt"
-                                      , "gtf"
-                                      , "gti"
-                                      , "gtu"
-                                      , "gtz"
-                                      , "lei"
-                                      , "lti"
-                                      , "ltz"]
+branches = listArray (0,15) (map C.pack ["al"
+                                       , "eq"
+                                       , "eqi"
+                                       , "ez"
+                                       , "ge"
+                                       , "gef"
+                                       , "gei"
+                                       , "geu"
+                                       , "gt"
+                                       , "gtf"
+                                       , "gti"
+                                       , "gtu"
+                                       , "gtz"
+                                       , "lei"
+                                       , "lti"
+                                       , "ltz"]
 
-branchSyntax, commentSyntax, minusSyntax
-  numberSyntax, labelSyntax, offsetSyntax
-    opSyntax, plusSyntax :: C.ByteString -> Bool
-
-branchSyntax s = isJust $ s `elemIndex'` branches
-
-commentSyntax s = s == C.pack "--"
-
-labelSyntax = not . branchSyntax &&& not . opSyntax &&& not . parSyntax &&& C.all isLabChar
-
-minusSyntax s = s == C.pack "-"
-
-numberSyntax s = C.unpack s =~ "^(-?[0-9]+)?\\[[0-9]+\\]$"
-
-offsetSyntax s = C.unpack s =~ "^[0-9]+$"
-
-opcode :: C.ByteString -> Maybe Int
 opcode s = s `elemIndex'` opcodes
 
 opcodes = listArray (0,63) (map C.pack ["add"
@@ -65,15 +56,27 @@ opcodes = listArray (0,63) (map C.pack ["add"
                                       , "subi"
                                       , "sw"
                                       , "swi"
-                                      , "wait"
                                       , "xor"]
+
+reserved s = branchSyntax s || opSyntax s
+
+ -- Token syntax
+
+branchSyntax, commentSyntax, labelSyntax, minusSyntax,
+  numberSyntax, offsetSyntax, opSyntax, plusSyntax :: C.ByteString -> Bool
+
+branchSyntax s = isJust $ s `elemIndex'` branches
+
+commentSyntax s = s == C.pack "--"
+
+labelSyntax s = not reserved s && C.unpack s =~ "^[a-zA-Z_][a-zA-Z_0-9]*$"
+
+minusSyntax s = s == C.pack "-"
+
+numberSyntax s = C.unpack s =~ "^(-?[0-9]+)?\\[[0-9]+\\]$"
+
+offsetSyntax s = C.unpack s =~ "^[0-9]+$"
 
 opSyntax s = isJust $ s `elemIndex'` opcodes
 
 plusSyntax s = s == (C.pack "+")
-
- -- punctChar c = c == ',' || c == '.'
-
-tokChar c = isLabChar c || c == '[' || c == ']' || c == '-' || c == '+'
-
-whiteSpace c = c == ' ' || c == '\t'

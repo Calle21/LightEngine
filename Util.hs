@@ -19,9 +19,6 @@ getReg :: Int32 -> Mode -> Set -> Regs -> IO Reg
 getReg i Raw _ regs = return $ regs ! i
 getReg i Easy set _ = readIORef $ set ! i
 
-isLabChar :: Char -> Bool
-isLabChar c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_'
-
 mask :: Int -> Int32
 mask amount = 2 ^ amount - 1
 

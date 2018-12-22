@@ -63,7 +63,7 @@ read' filename -> symbolTable = loop 1
                        (Nothing,s') -> (reverse acc, s')
                        (Just t, s') -> getALine (t : acc) s'
     getNextTokenOnLine :: C.ByteString -> (Maybe Token,C.ByteString)
-    getNextTokenOnLine s = let s' = C.dropWhile whiteSpace s
+    getNextTokenOnLine s = let s' = C.dropWhile (==' ') s
                            in if C.null s' || C.head s' == '\n' then (Nothing,safeTail' s')
                               else if C.head s' == ',' then (Just Comma, C.tail s')
                               else if C.head s' == '.' then (Just Par, C.tail s')
