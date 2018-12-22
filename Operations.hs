@@ -23,6 +23,7 @@ import Operations.Sub
 import Operations.Subi
 import Operations.Sw
 import Operations.Swi
+import Operations.Wait
 import Operations.Xor
 
 operations = listArray (0,63) [add
@@ -48,4 +49,5 @@ operations = listArray (0,63) [add
                              , subi
                              , sw
                              , swi
+                             , wait
                              , xor']

@@ -4,7 +4,8 @@ module Ubi (
        , module Data.Bits
        , module Data.Int
        , module Data.IORef
-       , module Data.Word
+       , module Data.List
+       , module Data.Maybe
        , module Unsafe.Coerce
             ) where
 
@@ -21,7 +22,14 @@ import Data.Int
 
 import Data.IORef
 
-import Data.Word
+import Data.List (
+                  foldl'
+                  )
+
+import Data.Maybe (
+                   fromJust
+                 , isJust
+                   )
 
 import Unsafe.Coerce (
                       unsafeCoerce
