@@ -12,10 +12,10 @@ assemble path = do contents <- listDirectory' path
                    then do bstrings <- mapM C.readFile sourcePaths
                            let sizes       = map getFileSize bstrings
                                symbolTable = zip (map takeBaseName sourcePaths)
-                                                 (scanl' (+) 1000 $ init sizes)
+                                                 (scanl' (+) 0 $ init sizes)
                                lexed       = map2 (read' symbolTable) (map takeFileName sourcePaths)
                                                                        bstrings
-                           return $ listToArray $ concat (replicate 1000 0 : lexed)
+                           return $ listToArray $ concat lexed
                    else
                      error "Could not find 'Main.s'"
   where

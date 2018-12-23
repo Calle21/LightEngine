@@ -4,10 +4,10 @@ import Ubi
 
 type Operation = Processor -> RAM -> Int32 -> IO Signal
 
-type Processor = RAM
+data Processor = Proc (Array Int Reg) [(Int, IO Int32)]
 
 type RAM = Array Int Reg
 
-type Reg = IORef Int32
+type Register = IORef Int32
 
-data Signal = Continue | Exit
+data Signal = Continue | Return

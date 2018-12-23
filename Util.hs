@@ -11,9 +11,11 @@ elemIndex' s arr = loop (bounds arr)
               | arr ! i == s = Just i
               | otherwise    = loop (i + 1,hi)
 
-getReg :: Int32 -> Mode -> Set -> Regs -> IO Reg
-getReg i Raw _ regs = return $ regs ! i
-getReg i Easy set _ = readIORef $ set ! i
+getReg :: Int32 -> Int32 -> Int32 -> Processor -> RAM -> IO Register
+getReg reg 0 _      proc _   = return $ proc ! reg
+getReg reg 1 offset proc ram = do addr <- (+offset) `fmap` readIORef (proc ! reg)
+                                  return $ ram ! addr
+                              
 
 listDirectory' :: FilePath -> IO [FilePath]
 listDirectory' path = map (path </>) `fmap` listDirectory path

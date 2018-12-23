@@ -8,7 +8,6 @@ import Util (pop, push)
 execute :: RAM -> IO ()
 execute ram = do
   proc <- makeProcessor
-  writeIORef (proc ! 15) 1000
   run proc ram
 
 makeProcessor :: IO Processor
@@ -24,7 +23,7 @@ run proc ram = do
   sig <- op proc ram arg
   case sig of
     Continue -> run proc ram
-    Exit     -> readIORef (proc ! 0)
+    Return   -> readIORef (proc ! 0)
   where
   decode :: Int32 -> (Operation,Int32)
   decode fetch = (operations ! fromIntegral (unsigned 5 $ fetch `shiftR` 27)

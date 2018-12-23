@@ -40,7 +40,8 @@ import Data.Maybe (
 import Data.Word
 
 import System.Directory (
-                         listDirectory
+                         doesDirectoryExist
+                       , listDirectory
                          )
 
 import System.Environment (
