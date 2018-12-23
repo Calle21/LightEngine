@@ -13,7 +13,6 @@ data Token = Branch Int32
            | Number Int32 Int
            | Offset Int32
            | Op Int32
-           | Par
            | Plus
 
 read' :: [(C.ByteString,Int)] -> String -> C.ByteString -> [Int32]
@@ -23,26 +22,22 @@ read' symbolTable filename = loop 1
   loop ln s = let (s',dropped) = dropEmptyLines 1 s
               in if C.null s' then []
                  else let (toks,s'') = getALine [] s'
-                          toks'      = checkPar toks
+                          toks'      = checkOp toks
                       in concatenateToks toks' : loop (ln + dropped) s''
     where
-    checkPar :: [Token] -> [Token]
-    checkPar (Par:xs) = Number 1 1 : checkOp xs
-    checkPar xs       = Number 0 1 : checkOp xs
+    checkOp :: [Token] -> [Token]
+    checkOp [Label addr] = [Number (fromJust $ opcode (C.pack "call")) 5, Number addr 26]
+    checkOp (Op n:xs)    = Number n 6 : checkArgs xs
+    checkOp _            = readError filename ln (C.pack "Expected lone label or op at beginning of line")
       where
-      checkOp :: [Token] -> [Token]
-      checkOp [Label addr] = [Number (fromJust $ opcode (C.pack "call")) 5, Number addr 26]
-      checkOp (Op n:xs)    = Number n 5 : checkArgs xs
-      checkOp _            = readError filename ln (C.pack "Expected lone label or op at beginning of line")
-        where
-        checkArgs :: [Token] -> [Token]
-        checkArgs (x:Comma:xs)                   = x : checkArgs xs
-        checkArgs (Label addr:Plus:Offset i:xs)  = checkArgs (Number (addr + i) 20 : xs)
-        checkArgs (Label addr:Minus:Offset i:xs) = checkArgs (Number (addr - i) 20 : xs)
-        checkArgs (_:_:_)                        = readError filename ln (C.pack "Bad syntax")
-        checkArgs [Comma]                        = readError filename ln (C.pack "Comma at end of line")
-        checkArgs [x]                            = [x]
-        checkArgs []                             = []
+      checkArgs :: [Token] -> [Token]
+      checkArgs (x:Comma:xs)                   = x : checkArgs xs
+      checkArgs (Label addr:Plus:Offset i:xs)  = checkArgs (Number (addr + i) 20 : xs)
+      checkArgs (Label addr:Minus:Offset i:xs) = checkArgs (Number (addr - i) 20 : xs)
+      checkArgs (_:_:_)                        = readError filename ln (C.pack "Bad syntax")
+      checkArgs [Comma]                        = readError filename ln (C.pack "Comma at end of line")
+      checkArgs [x]                            = [x]
+      checkArgs []                             = []
     concatenateToks :: [Token] -> Int32
     concatenateToks toks = let raw = map toNumber toks
                            in if sumOn (\Number _ size -> size) raw == 32
@@ -68,7 +63,6 @@ read' symbolTable filename = loop 1
     getNextTokenOnLine s = let s' = C.dropWhile (==' ') s
                            in if C.null s' || C.head s' == '\n' then (Nothing,safeTail' s')
                               else if C.head s' == ',' then (Just Comma, C.tail s')
-                              else if C.head s' == '.' then (Just Par, C.tail s')
                               else let (ts,s'') = C.span tokChar s'
                                        t | branchSyntax ts  = Branch $ fromJust (branch ts)
                                          | commentSyntax ts = Comment

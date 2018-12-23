@@ -1,14 +1,11 @@
 module Main where
 
-import Assembler.Assemble (assemble)
-import Assembler.Write (readWritten)
+import Assembler.Assemble
 import Execute
-import System.Environment (getArgs)
+import Ubi
 
 main :: IO ()
 main = do args <- getArgs
           case args of
-            ["help"]    -> C.putStrLn (C.pack "Try 'LightEngine as *path*' and 'LightEngine *exe*' to run something")
-            ["as",path] -> assemble path
-            [exe]       -> execute =<< readWritten exe
-            _           -> return ()
+            [path] -> assemble path >>= execute
+            _      -> C.putStrLn (C.pack "Pass path to directory containing source files")

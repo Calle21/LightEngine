@@ -1,33 +1,28 @@
 module Assembler.Assemble where
 
 import Assembler.Read
-import Assembler.Write (writeLexed)
 import qualified Data.ByteString.Char8 as C
-import System.Directory
-import System.FilePath.Posix
 import Ubi
-import Util (listDirectory', map2, safeTail')
+import Util
 
-assemble :: FilePath -> IO ()
+assemble :: FilePath -> IO RAM
 assemble path = do contents <- listDirectory' path
-                   let mpath       = path </> "main.s"
-                       sourcePaths = putFirst mpath $ filter (\p -> takeExtension p == ".s") contents
-                   if head sourcePaths == mpath
-                   then do let objPaths = filter (\p -> takeExtension p == ".o") contents
-                           bstrings <- mapM C.readFile sourcePaths
-                           let sizes       = map (getFileSize 0) bstrings
+                   let sourcePaths = sort $ filter (\p -> takeExtension p == ".s") contents
+                   if head sourcePaths == path </> "Main.s"
+                   then do bstrings <- mapM C.readFile sourcePaths
+                           let sizes       = map getFileSize bstrings
                                symbolTable = zip (map takeBaseName sourcePaths)
-                                                 scanl' (+) 1000 (init sizes)
+                                                 (scanl' (+) 1000 $ init sizes)
                                lexed       = map2 (read' symbolTable) (map takeFileName sourcePaths)
                                                                        bstrings
-                           writeLexed (takeFileName path ++ ".exe") lexed
+                           return $ listToArray $ concat (replicate 1000 0 : lexed)
                    else
-                     error "Could not find 'main.s'"
+                     error "Could not find 'Main.s'"
   where
-  getFileSize :: Int32 -> C.ByteString -> Int32
-  getFileSize size s | C.null s  = size
-                     | otherwise = let (filled,s') = isLineFilled s
-                                   in getFileSize (fromIntegral (fromEnum filled) + size) s'
+  getFileSize :: C.ByteString -> Int32
+  getFileSize s | C.null s  = 0
+                | otherwise = let (filled,s') = isLineFilled s
+                              in fromIntegral (fromEnum filled) + getFileSize s'
     where
     isLineFilled :: C.ByteString -> (Bool,C.ByteString)
     isLineFilled s = let s'  = C.dropWhile (==' ') s

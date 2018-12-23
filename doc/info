@@ -1,0 +1,59 @@
+Machine code:
+  5 bits > opcode
+  27 bits > args
+
+Registers:
+  0     - Return register
+  1-7   - Parameters
+  8-11  - Variables
+  12    - Last object
+  13-14 - Fetch
+  15    - ic
+
+Instr:
+  add, addf, and, div, divf, mul, mulf, or, sl, sr, sra, sub, subf, xor:
+    4reg0, 4reg1, 4des, 3mode, 12offset
+
+  addi, andi, divi, muli, ori, subi, xori:
+    4reg, 9immu, 4des, 2mode, 8offset
+
+  branch:
+    1negate, 4type, 22args
+   al:
+     22imms
+   eq, eqf, gt, gtf, gtu, lt, ltf, ltu:
+     4reg0, 4reg1, 14imms
+   eqi, gti, lti:
+     4reg, 8imms, 10imms
+   even, ez, gtz, ltz:
+     4reg, 18imms
+
+  call:
+    27addr + 32params
+
+  toggle:
+    4reg, 5bit, 1mode, 17unused
+
+  convert:
+    4reg, 4des, 1way, 2mode, 16offset
+  
+  cmpjmp:
+    4reg0, 4reg1, 9immu, 10immu
+
+  firm:
+    7type, 20params
+
+  la:
+    27addr
+
+  li:
+    4reg, 1mode, 22imms
+
+  move, not:
+    4reg, 4des, 2mode, 1unused, 16offset
+
+  return:
+    27unused
+
+  wait:
+    17unused, 10immu

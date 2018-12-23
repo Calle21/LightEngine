@@ -15,6 +15,12 @@ getReg :: Int32 -> Mode -> Set -> Regs -> IO Reg
 getReg i Raw _ regs = return $ regs ! i
 getReg i Easy set _ = readIORef $ set ! i
 
+listDirectory' :: FilePath -> IO [FilePath]
+listDirectory' path = map (path </>) `fmap` listDirectory path
+
+listToArray :: [a] -> Array Int a
+listToArray xs = listArray (0, length xs - 1) xs
+
 map2 :: (a -> b -> c) -> [a] -> [b] -> [c]
 map2 _  []     []     = []
 map2 fn (x:xs) (y:ys) = fn x y : map2 fn xs ys
