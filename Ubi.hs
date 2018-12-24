@@ -9,6 +9,7 @@ module Ubi (
        , module Data.Word
        , module System.Directory
        , module System.Environment
+       , module System.IO.Unsafe
        , module Unsafe.Coerce
             ) where
 
@@ -54,6 +55,8 @@ import System.FilePath.Posix (
                             , takeExtension
                             , takeFileName
                               )
+
+import System.IO.Unsafe ( unsafePerformIO )
 
 import Unsafe.Coerce (
                       unsafeCoerce

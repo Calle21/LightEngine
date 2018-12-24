@@ -2,23 +2,24 @@ module Emulator.Operations.RegRegDes where
 
 import Types
 import Ubi
-import Util (getReg)
+import Util (decode, getReg)
 
-regRegDes :: (Int32 -> Int32 -> Int32) -> Operation
-regRegDes op proc ram arg = do
-  let reg0       = unsigned 4 $ arg `shiftR` 23
-      reg1       = unsigned 4 $ arg `shiftR` 19
-      des        = unsigned 4 $ arg `shiftR` 15
-      reg0mode   = unsigned 1 $ arg `shiftR` 14
-      reg1mode   = unsigned 1 $ arg `shiftR` 13
-      desmode    = unsigned 1 $ arg `shiftR` 12
-      reg0offset = unsigned 4 $ arg `shiftR` 8
-      reg1offset = unsigned 4 $ arg `shiftR` 4
-      desoffset  = unsigned 4 arg
-  reg0' <- getReg reg0 reg0mode reg0offset proc ram
-  reg1' <- getReg reg1 reg1mode reg1offset proc ram
-  des'  <- getReg des  desmode  desoffset
-  writeIOReg des' `fmap` liftM2 op (readIORef reg0') (readIORef reg1')
+regRegDes :: (Int32 -> Int32 -> (Int32,Int32)) -> Operation
+regRegDes op proc ram args = do
+  let (ix0,     args')        = decode Unsigned 4 args
+      (mode0,   args'')       = decode Unsigned 1 args'
+      (offset0, args''')      = decode Unsigned 3 args''
+      (ix1,     args'''')     = decode Unsigned 4 args'''
+      (mode1,   args''''')    = decode Unsigned 1 args''''
+      (offset1, args'''''')   = decode Unsigned 3 args'''''
+      (ix2,     args''''''')  = decode Unsigned 4 args''''''
+      (mode2,   args'''''''') = decode Unsigned 1 args'''''''
+      (offset2, _)            = decode Unsigned 3 args''''''''
+  reg0 <- getReg ix0 mode0 offset0 proc ram
+  reg1 <- getReg ix1 mode1 offset1 proc ram
+  des  <- getReg ix2 mode2 offset2 proc ram
+  (result,extra)
+  writeIOReg des `fmap` liftM2 op (readIORef reg0) (readIORef reg1)
   return Continue
 
 regRegDesF :: (Float -> Float -> Float) -> Operation

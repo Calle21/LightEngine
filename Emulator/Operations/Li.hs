@@ -1,11 +1,15 @@
 module Emulator.Operations.Li where
 
-import Emulator.Operations.Templates (one)
 import Types
+import Ubi
+import Util (getReg, decode)
 
 li :: Operation
-li (Processor _ regs) _ arg = do
-  let dest = arg `shiftR` 23
-      imm  = signed 23 arg
-  writeIORef dest imm
+li (Proc regs _) ram args = do
+  let (ix,     args')   = decode Unsigned 4 args
+      (mode,   args'')  = decode Unsigned 1 args'
+      (offset, args''') = decode Unsigned 4 args''
+      (imm,_)           = decode Signed  18 args'''
+  reg <- getReg ix mode offset regs ram
+  writeIORef reg imm
   return Continue

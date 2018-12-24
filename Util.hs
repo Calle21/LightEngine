@@ -1,7 +1,14 @@
 module Util where
 
 import qualified Data.ByteString.Char8 as C
+import Types
 import Ubi
+
+decode :: DecodeType -> Int -> Int32 -> (Int32,Int32)
+decode Unsigned amount value = (shiftR value (32 - amount), shiftL value amount)
+decode Signed   amount value = let sign    = value .&. minBound
+                                   cleared = clearBit value 31
+                               in (sign .|. cleared `shiftR` (32 - amount), shiftL value amount)
 
 elemIndex' :: C.ByteString -> Array Int C.ByteString -> Maybe Int
 elemIndex' s arr = loop (bounds arr)
@@ -11,37 +18,21 @@ elemIndex' s arr = loop (bounds arr)
               | arr ! i == s = Just i
               | otherwise    = loop (i + 1,hi)
 
-getReg :: Int32 -> Int32 -> Int32 -> Processor -> RAM -> IO Register
-getReg reg 0 _      proc _   = return $ proc ! reg
-getReg reg 1 offset proc ram = do addr <- (+offset) `fmap` readIORef (proc ! reg)
-                                  return $ ram ! addr
+getReg :: Int32 -> Int32 -> Int32 -> Regs -> RAM -> IO Register
+getReg ix 0 _      regs _   = return $ regs ! ix
+getReg ix 1 offset regs ram = do addr <- (+offset) `fmap` readIORef (regs ! ix)
+                                 return $ ram ! addr
                               
 
 listDirectory' :: FilePath -> IO [FilePath]
 listDirectory' path = map (path </>) `fmap` listDirectory path
 
-listToArray :: [a] -> Array Int a
+listToArray :: [a] -> Array Int32 a
 listToArray xs = listArray (0, length xs - 1) xs
 
 map2 :: (a -> b -> c) -> [a] -> [b] -> [c]
 map2 _  []     []     = []
 map2 fn (x:xs) (y:ys) = fn x y : map2 fn xs ys
-
-mask :: Int -> Int32
-mask amount = 2 ^ amount - 1
-
-pop :: Pool -> IO (Maybe Processor)
-pop (Pool n arr) = do n' <- readIORef n
-                       case n' of
-                         0   -> return Nothing
-                         n'' -> do let n''' = pred n''
-                                   writeIORef n n'''
-                                   readIORef (arr ! n''')
-
-push :: Processor -> Pool -> IO ()
-push proc (Pool n arr) = do n' <- readIORef n
-                             writeIORef (arr ! n') proc
-                             modifyIORef n succ
 
 putFirst :: a -> [a] -> [a]
 putFirst elt xs | elt `elem` xs = elt : delete elt xs
@@ -51,16 +42,6 @@ safeTail' :: C.ByteString -> C.ByteString
 safeTail' s | C.null s  = s
             | otherwise = C.tail s
 
-signed :: Int -> Int32 -> Int32
-signed size value = let bit   = size - 1
-                        mask' = mask bit
-                    in case value `testBit` bit of
-                         True  -> value .|. complement mask'
-                         False -> value .&. mask'
-
 sumOn :: Num b => (a -> b) -> [a] -> b
 sumOn _  []     = 0
 sumOn fn (x:xs) = fn x + sumOn fn xs
-
-unsigned :: Int -> Int32 -> Int32
-unsigned size value = mask size .&. value

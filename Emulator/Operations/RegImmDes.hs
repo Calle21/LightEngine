@@ -2,21 +2,21 @@ module Emulator.Operations.RegImmDes where
 
 import Types
 import Ubi
-import Util (getReg)
+import Util (decode, getReg)
 
 regImmDes :: (Int32 -> Int32 -> Int32) -> Operation
-regImmDes op proc ram arg = do
-  let reg0       = unsigned 4 $ arg `shiftR` 23
-      imm        =   signed 9 $ arg `shiftR` 14
-      des        = unsigned 4 $ arg `shiftR` 10
-      regmode    = unsigned 1 $ arg `shiftR` 9
-      desmode    = unsigned 1 $ arg `shiftR` 8
-      regoffset  = unsigned 4 $ arg `shiftR` 4
-      desoffset  = unsigned 4 arg
-  reg <- getReg reg0 reg0mode reg0offset proc ram
-  des <- getReg des  desmode  desoffset
-  regvalue <- readIORef reg
-  writeIORef des (regvalue `op` immu)
+regImmDes op (Proc regs _) ram args = do
+  let (ix0,     args')      = decode Unsigned 4 args
+      (mode0,   args'')     = decode Unsigned 1 args'
+      (offset0, args''')    = decode Unsigned 4 args''
+      (imm,     args'''')   = decode Signed   9 args'''
+      (ix1,     args''''')  = decode Unsigned 4 args''''
+      (mode1,   args'''''') = decode Unsigned 1 args'''''
+      (offset1, _)          = decode Unsigned 4 args''''''
+  reg <- getReg ix0 mode0 offset0 proc ram
+  des <- getReg ix1 mode1 offset1 proc ram
+  value <- readIORef reg
+  writeIORef des (value `op` imm)
   return Continue
 
 regRegDesF :: (Float -> Float -> Float) -> Operation

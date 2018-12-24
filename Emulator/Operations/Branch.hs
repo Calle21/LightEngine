@@ -2,52 +2,55 @@ module Emulator.Operations.Branch (branch) where
 
 import Types
 import Ubi
-import Util (getReg, signed, unsigned)
+import Util (decode, getReg)
 
 branch :: Operation
-branch proc ram arg = let neg  = [id,not] !! (arg `shiftR` 26)
-                          fn   = types ! unsigned 4 (arg `shiftR` 22)
-                          arg' = unsigned 22 arg
-                      in fn neg proc ram arg'
+branch proc ram args = let (neg,args')  = decode Unsigned 1 args
+                           (br, args'') = decode Unsigned 4 args''
+                      in brTypes ! br $ ([id,not] !! neg) proc ram args''
 
  -- Templates
 
 reg (Int32 -> Bool) -> (Bool -> Bool) -> Operation
-reg op neg (Proc regs _) ram arg = do
-  let ix   = arg `shiftR` 18
-      mode = unsigned 1 `shiftR` 17
-      jump = unsigned 10 arg
-  reg <- getReg ix regmode 0 regs ram
-  regvalue <- readIORef reg
-  if neg $ op regvalue then modifyIORef (proc ! 15) (+jump)
-                       else return ()
+reg op negfn (Proc regs _) ram args = do
+  let (ix,     args')         = decode Unsigned 4 args
+      (mode,   args'')        = decode Unsigned 1 args'
+      (offset, args''')       = decode Unsigned 7 args''
+      (jump, _)               = decode Signed  10 args'''
+  reg <- getReg ix mode offset regs ram
+  value <- readIORef reg
+  if negfn $ op value then modifyIORef (proc ! 15) (+jump)
+                      else return ()
   return Continue
 
 regImm, regReg :: (Int32 -> Int32 -> Bool) -> (Bool -> Bool) -> Operation
 
-regImm op neg (Proc _ regs) ram arg = do
-  let ix   = arg `shiftR` 18
-      mode = unsigned 1 (arg `shiftR` 17)
-      imm  = signed 7 (arg `shiftR` 10)
-      jump = signed 10 arg
-  reg <- getReg ix mode 0 regs ram
-  regvalue <- readIORef reg
-  if neg $ regvalue `op` imm then modifyIORef (proc ! 15) (+jump)
-                             else return ()
+regImm op negfn (Proc _ regs) ram args = do
+  let (ix,     args')    = decode Unsigned 4 args
+      (mode,   args'')   = decode Unsigned 1 args'
+      (offset, args''')  = decode Unsigned 2 args''
+      (imm,    args'''') = decode Signed   5 args'''
+      (jump,_)           = decode Signed  10 args''''
+  reg <- getReg ix mode offset regs ram
+  value <- readIORef reg
+  if negfn $ value `op` imm then modifyIORef (proc ! 15) (+jump)
+                            else return ()
   return Continue
 
-regReg op neg (Proc regs _) ram arg = do
-  let ix0   = arg `shiftR` 18
-      ix1   = unsigned 4 (arg `shiftR` 14)
-      mode0 = unsigned 1 (arg `shiftR` 13)
-      mode1 = unsigned 1 (arg `shiftR` 12)
-      jump  =   signed 10 arg
-  reg0 <- getReg ix0 mode0 0 regs ram
-  reg1 <- getReg ix1 mode1 0 regs ram
+regReg op negfn (Proc regs _) ram args = do
+  let (ix0,     args')      = decode Unsigned 4 args
+      (mode0,   args'')     = decode Unsigned 1 args'
+      (offset0, args''')    = decode Unsigned 1 args''
+      (ix1,     args'''')   = decode Unsigned 4 args'''
+      (mode1,   args''''')  = decode Unsigned 1 args''''
+      (offset1, args'''''') = decode Unsigned 1 args'''''
+      (jump,_)              = decode Signed  10 args''''''
+  reg0 <- getReg ix0 mode0 offset0 regs ram
+  reg1 <- getReg ix1 mode1 offset1 regs ram
   value0 <- readIOReg reg0
   value1 <- readIORef reg1
-  if neg $ value0 `op` value1 then modifyIORef (regs ! 15) (+jump)
-                              else return ()
+  if negfn $ value0 `op` value1 then modifyIORef (regs ! 15) (+jump)
+                                else return ()
   return Continue
 
 regRegF :: (Float -> Float -> Bool) -> Operation
@@ -59,24 +62,26 @@ regRegU op = regReg \i0 i1 -> fromIntegral i0 `op` fromIntegral i1
 
  -- Variations
 
-types = listToArray [al,bit,eq,eqf,eqi,ez,gt,gtf,gti,gtu,gtz,lt,ltf,lti,ltu,ltz]
+brTypes = listToArray [al,bit,eq,eqf,eqi,ez,gt,gtf,gti,gtu,gtz,lt,ltf,lti,ltu,ltz]
 
 al, bit, eq, eqf, eqi, ez, gt, gtf, gti, gtu, gtz, lt, ltf, lti, ltu, ltz :: (Bool -> Bool) -> Operation
 
-al neg (Proc regs _) ram arg = do if neg True then modifyIORef (regs ! 15) (+ signed 10 arg)
-                                              else return ()
-                                  return Continue
+al negfn (Proc regs _) ram args = do let (jump,_) = decode Signed 10 args
+                                     if negfn True then modifyIORef (regs ! 15) (+jump)
+                                     else return ()
+                                     return Continue
 
-bit neg (Proc regs _) ram arg = do let ix   = arg `shiftR` 18
-                                       mode = unsigned 1 (arg `shiftR` 17)
-                                       bit  = unsigned 5 (arg `shiftR` 12)
-                                       jump = signed 10 arg
-                                   reg <- getReg ix reg 0 regs ram
-                                   regvalue <- readIORef 
-                                   if neg $ testBit regvalue (fromIntegral bit)
-                                   then modifyIORef (regs ! 15) (+jump)
-                                   else return ()
-                                   return Continue
+bit negfn (Proc regs _) ram args = do let (ix,     args')    = decode Unsigned 4 args
+                                          (mode,   args'')   = decode Unsigned 1 args'
+                                          (offset, args''')  = decode Unsigned 2 args''
+                                          (bit,    args'''') = decode Unsigned 5 args'''
+                                          (jump, _)          = decode Signed  10 args''''
+                                      reg <- getReg ix regs offset regs ram
+                                      value <- readIORef reg
+                                      if negfn $ testBit value (fromIntegral bit)
+                                      then modifyIORef (regs ! 15) (+jump)
+                                      else return ()
+                                      return Continue
 
 eq = regReg (==)
 

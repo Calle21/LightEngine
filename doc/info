@@ -4,39 +4,38 @@ Machine code:
 
 Registers:
   0     - Return register
-  1-7   - Parameters
-  8-12  - Variables
+  1-12  - Arguments and variables
   13-14 - Fetch
   15    - ic
 
 Instr:
   add, addf, and, div, divf, mul, mulf, or, sl, sr, sra, sub, subf, xor:
-    4reg0, 4reg1, 4des, 3mode, 12offset
+    4reg, 1mode, 3offset, 4reg, 1mode, 3offset, 4reg, 1mode, 3offset
 
   addi, andi, divi, muli, ori, xori:
-    4reg, 9imm, 4des, 2mode, 8offset
+    4reg, 1mode, 4offset, 9imm, 4reg, 1mode, 4offset
 
   branch:
     1negate, 4type, 22args
    al:
-     12unused, 10imm
+     10imm, 12unused
    bit:
-     4reg, 1mode, 5bit, 2unused, 10imm
+     4reg, 1mode, 2offset, 5bit, 10imm
    eq, eqf, gt, gtf, gtu, lt, ltf, ltu:
-     4reg0, 4reg1, 2mode, 2unused, 10imm
+     4reg, 1mode, 1offset, 4reg, 1mode, 1offset, 10imm
    eqi, gti, lti:
-     4reg, 1mode, 7imm, 10imm
+     4reg, 1mode, 2offset, 5imm, 10imm
    ez, gtz, ltz:
-     4reg, 1mode, 7unused, 10imm
+     4reg, 1mode, 7offset, 10imm
 
   call:
-    27addr + 32params
+    27addr + 4return, 28param + 4priority, 21offset, 7mode
 
   clearbit, setbit:
     4reg, 1mode, 5bit, 17unused
 
   convert:
-    4reg, 4des, 1way, 2mode, 8unused, 8offset
+    4reg, 4des, 1way, 2mode, 8offset, 8unused
   
   cmpjmp:
     4reg0, 4reg1, 9immu, 10immu
@@ -48,13 +47,13 @@ Instr:
     27addr
 
   li:
-    4reg, 1mode, 22imm
+    4reg, 1mode, 4offset, 18imm
 
   move, not:
-    4reg, 4des, 2mode, 9unused, 8offset
+    4reg, 1mode, 8offset, 4reg, 1mode, 9offset
 
   return:
     27unused
 
   wait:
-    22unused, 5immu
+    5immu, 22unused
