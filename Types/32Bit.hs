@@ -16,3 +16,5 @@ type Regs = RAM
 type RAM = Array Int32 Reg
 
 type Register = IORef Int32
+
+data Signal = Continue | Return Int32

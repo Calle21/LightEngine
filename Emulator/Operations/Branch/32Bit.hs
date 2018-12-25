@@ -1,8 +1,8 @@
 module Emulator.Operations.Branch (branch) where
 
-import Types
+import Types.32Bit
 import Ubi
-import Util (decode, getReg)
+import Util.32Bit (decode, getPlace)
 
 branch :: Operation
 branch proc ram args = let (neg,args')  = decode Unsigned 1 args
@@ -13,10 +13,8 @@ branch proc ram args = let (neg,args')  = decode Unsigned 1 args
 
 reg (Int32 -> Bool) -> (Bool -> Bool) -> Operation
 reg op negfn (Proc regs _) ram args = do
-  let (ix,     args')         = decode Unsigned 4 args
-      (mode,   args'')        = decode Unsigned 1 args'
-      (offset, args''')       = decode Unsigned 7 args''
-      (jump, _)               = decode Signed  10 args'''
+  (reg, args') <- getPlace 7 args regs ram
+  let (jump, _) = decode Signed  10 args'
   reg <- getReg ix mode offset regs ram
   value <- readIORef reg
   if negfn $ op value then modifyIORef (proc ! 15) (+jump)

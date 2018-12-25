@@ -1,7 +1,7 @@
 module Emulator.Execute.32Bit where
 
 import Emulator.Processor.32Bit
-import Operations.32Bit
+import Emulator.Operations.32Bit
 import Types.32Bit
 import Ubi
 import Util.32Bit (decode)
@@ -16,9 +16,9 @@ run proc@(Proc regs _) ram = do
   writeIORef (regs ! 15) (succ ic)
   fetch <- readIORef (ram ! ic)
   writeIORef (regs ! 14) fetch
-  let (opi,arg) = decode 5 fetch
-  sig <- (operations ! opi) proc ram arg
+  let (opi,args) = decode Unsigned 5 fetch
+  sig <- (operations ! opi) proc ram args
   case sig of
     Continue -> run proc ram
-    Return   -> do returnProcessor proc
-                   readIORef (regs ! 0)
+    Return v -> do returnProcessor proc
+                   return v

@@ -1,53 +1,22 @@
-module Emulator.Operations where
+module Emulator.Operations (operations) where
 
-import Operations.Add
-import Operations.Addi
-import Operations.And
-import Operations.Branch
-import Operations.Call
-import Operations.Callpar
-import Operations.CmpJmp
-import Operations.Decr
-import Operations.Incr
-import Operations.Li
-import Operations.Lw
-import Operations.Lwi
-import Operations.Move
-import Operations.Mul
-import Operations.Not
-import Operations.Or
-import Operations.ResetParams
-import Operations.Return
-import Operations.SetParams
-import Operations.Sub
-import Operations.Subi
-import Operations.Sw
-import Operations.Swi
-import Operations.Wait
-import Operations.Xor
+import Operations.Branch.32bit
+import Operations.Call.32bit
+import Operations.Multi.32Bit
+import Operations.RegImmDes.32bit
+import Operations.RegRegDes.32bit
 
-operations = listArray (0,63) [add
-                             , addi
-                             , and
-                             , branch
-                             , call
-                             , callpar
-                             , cmpJmp
-                             , decr
-                             , incr
-                             , li
-                             , lw
-                             , lwi
-                             , move
-                             , mul
-                             , not'
-                             , or
-                             , resetParams
-                             , return'
-                             , setParams
-                             , sub
-                             , subi
-                             , sw
-                             , swi
-                             , wait
-                             , xor']
+operations = listArray (0,31) [add , addf , addi , and
+                             , andi , branch , call , div'
+                             , divf , divi , exp' , expi
+                             , la , max' , maxf , min'
+                             , minf , mul , mulf , muli
+                             , multi , or , ori , rl
+                             , rr , sl , sr , sra
+                             , sub , subf , xor' , xori]
+
+la :: Operation
+la (Proc regs _) ram args = do
+  let addr = args `shiftR` 5
+  writeIORef (regs ! 13) addr
+  return Continue

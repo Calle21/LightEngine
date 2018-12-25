@@ -28,18 +28,10 @@ andi = regImmDes $ extra (.&.)
 
 divi = regImmDes dive
 
+expi = regImmDes $ extra (^)
+
 muli = regImmDes mule
 
 ori = regImmDes $ extra (.|.)
-
-rli = regImmDes $ extra rotateL
-
-rri = regImmDes $ extra rotateR
-
-sli = regImmDes $ extra shiftL
-
-sri = regImmDes $ extra \i0 i1 -> fromIntegral $ (fromIntegral i0 :: Word32) `shiftR` (fromIntegral i1 :: Word32)
-
-srai = regImmDes $ extra shiftR
 
 xori = regImmDes $ extra xor

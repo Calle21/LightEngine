@@ -3,54 +3,47 @@ Machine code:
   27 bits > args
 
 Registers:
-  0     - Return register
-  1-12  - Arguments and variables
+  0-12  - General purpose
   13-14 - Fetch
   15    - ic
 
 Instr:
-  add, addf, and, div, divf, exp, mul, mulf, or, rl, rr, sl, sr, sra, sub, subf, xor:
-    4reg, 1mode, 3offset, 4reg, 1mode, 3offset, 4reg, 1mode, 3offset
+  add, addf, and, div, divf, exp, max, maxf, min, minf, mul, mulf, or, rl, rr, sl, sr, sra, sub, subf, xor:
+    9place, 9place, 9place
 
-  addi, andi, divi, expi, muli, ori, rli, rri, xori:
-    4reg, 1mode, 3offset, 11imm, 4reg, 1mode, 3offset
+  addi, andi, divi, expi, muli, ori, xori:
+    9place, 5shift, 4imm, 9place
 
   branch:
     1negate, 4type, 22args
    al:
      10imm, 12unused
    bit:
-     4reg, 1mode, 2offset, 5bit, 10imm
+     7place, 5bit, 10imm
    eq, eqf, gt, gtf, gtu, lt, ltf, ltu:
-     4reg, 1mode, 1offset, 4reg, 1mode, 1offset, 10imm
+     6place, 6place, 10imm
    eqi, gti, lti:
-     4reg, 1mode, 2offset, 5imm, 10imm
+     7place, 5imm, 10imm
    ez, gtz, ltz:
-     4reg, 1mode, 7offset, 10imm
+     12place, 10imm
 
   call:
-    27addr + 4return, 28param + 4priority, 21offset, 7mode
-
-  firm:
-    7type, 20params
+    27addr + 4priority, 4n, 24places + n/4 (32places)
 
   la:
     27addr
 
-  li:
-    4reg, 1mode, 4offset, 18imm
- 
   multi:
-    3type, 24args
-   clearBit, setBit, toggleBit:
-     4reg, 1mode, 4offset, 5bit, 4reg, 1mode, 5offset, 
+    4type, 23args
    convert:
-     1way, 4reg, 1mode, 6offset, 4reg, 1mode, 7offset
-   fact, move, not:
-     4reg, 1mode, 7offset, 4reg, 1mode, 7offset
-   short:
-     1which, 22args
-    return:
-      1imm?, 22imm
-    wait:
-      5immu, 18unused
+     1way, 11place, 11place
+   fact:
+     11place, 12place
+   return:
+     23place
+   rli, rri, sli, sri, srai:
+     9place, 5shift, 9place
+   special:
+     8type, 7place, 8place
+   wait:
+     8place, 15unused

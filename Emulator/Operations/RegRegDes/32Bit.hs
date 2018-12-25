@@ -40,6 +40,16 @@ div' = regRegDes dive
 
 divf = regRegDesF $ extra (/)
 
+exp' = regRegDes $ extra (^)
+
+max' = regRegDes $ extra max
+
+maxf = regRegDesF max
+
+min' = regRegDes $ extra min
+
+minf = regRegDesF min
+
 mul = regRegDes mule
 
 mulf = regRegDesF $ extra (*)

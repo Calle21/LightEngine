@@ -10,9 +10,11 @@ divf
 divi
 exp
 expi
-firm
 la
-li
+max
+maxf
+min
+minf
 mul
 mulf
 muli
@@ -20,9 +22,7 @@ multi
 or
 ori
 rl
-rli
 rr
-rri
 sl
 sr
 sra
@@ -55,13 +55,14 @@ firm:
   ...
 
 multi:
-  clearBit
   convert
   fact
-  move
-  not
-  setBit
   short
    return
+   rli
+   rri
+   sli
+   sri
+   srai
    wait
-  toggleBit
+  special
