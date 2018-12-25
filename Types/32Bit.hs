@@ -1,10 +1,9 @@
-module Types where
+module Types.32Bit where
 
 import qualified Data.Map.Strict as M
+import Types
 import Ubi
-import Util (listToArray)
-
-data DecodeType = Signed | Unsigned
+import Util.32Bit (listToArray)
 
 type Operation = Processor -> RAM -> Int32 -> IO Signal
 
@@ -17,5 +16,3 @@ type Regs = RAM
 type RAM = Array Int32 Reg
 
 type Register = IORef Int32
-
-data Signal = Continue | Return

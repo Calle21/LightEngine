@@ -5,29 +5,29 @@ and
 andi
 branch
 call
-clearbit
-cmpjmp
-convert
 div
 divf
 divi
+exp
+expi
 firm
+la
 li
-move
 mul
 mulf
 muli
-not
+multi
 or
 ori
-return
-setbit
+rl
+rli
+rr
+rri
 sl
 sr
 sra
 sub
 subf
-wait
 xor
 xori
 
@@ -53,3 +53,15 @@ firm:
   putChar
   readChar
   ...
+
+multi:
+  clearBit
+  convert
+  fact
+  move
+  not
+  setBit
+  short
+   return
+   wait
+  toggleBit

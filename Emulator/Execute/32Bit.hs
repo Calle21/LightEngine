@@ -1,10 +1,10 @@
-module Emulator.Execute where
+module Emulator.Execute.32Bit where
 
-import Emulator.Processor
-import Operations
-import Types
+import Emulator.Processor.32Bit
+import Operations.32Bit
+import Types.32Bit
 import Ubi
-import Util (decode)
+import Util.32Bit (decode)
 
 execute :: RAM -> IO ()
 execute ram = do proc <- getProcessor

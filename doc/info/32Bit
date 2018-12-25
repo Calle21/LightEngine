@@ -9,11 +9,11 @@ Registers:
   15    - ic
 
 Instr:
-  add, addf, and, div, divf, mul, mulf, or, sl, sr, sra, sub, subf, xor:
+  add, addf, and, div, divf, exp, mul, mulf, or, rl, rr, sl, sr, sra, sub, subf, xor:
     4reg, 1mode, 3offset, 4reg, 1mode, 3offset, 4reg, 1mode, 3offset
 
-  addi, andi, divi, muli, ori, xori:
-    4reg, 1mode, 4offset, 9imm, 4reg, 1mode, 4offset
+  addi, andi, divi, expi, muli, ori, rli, rri, xori:
+    4reg, 1mode, 3offset, 11imm, 4reg, 1mode, 3offset
 
   branch:
     1negate, 4type, 22args
@@ -31,15 +31,6 @@ Instr:
   call:
     27addr + 4return, 28param + 4priority, 21offset, 7mode
 
-  clearbit, setbit:
-    4reg, 1mode, 5bit, 17unused
-
-  convert:
-    4reg, 4des, 1way, 2mode, 8offset, 8unused
-  
-  cmpjmp:
-    4reg0, 4reg1, 9immu, 10immu
-
   firm:
     7type, 20params
 
@@ -48,12 +39,18 @@ Instr:
 
   li:
     4reg, 1mode, 4offset, 18imm
-
-  move, not:
-    4reg, 1mode, 8offset, 4reg, 1mode, 9offset
-
-  return:
-    27unused
-
-  wait:
-    5immu, 22unused
+ 
+  multi:
+    3type, 24args
+   clearBit, setBit, toggleBit:
+     4reg, 1mode, 4offset, 5bit, 4reg, 1mode, 5offset, 
+   convert:
+     1way, 4reg, 1mode, 6offset, 4reg, 1mode, 7offset
+   fact, move, not:
+     4reg, 1mode, 7offset, 4reg, 1mode, 7offset
+   short:
+     1which, 22args
+    return:
+      1imm?, 22imm
+    wait:
+      5immu, 18unused

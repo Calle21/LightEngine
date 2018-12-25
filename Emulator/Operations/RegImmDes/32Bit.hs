@@ -1,10 +1,11 @@
 module Emulator.Operations.RegImmDes where
 
+import Emulator.Operations.Extras
 import Types
 import Ubi
 import Util (decode, getReg)
 
-regImmDes :: (Int32 -> Int32 -> Int32) -> Operation
+regImmDes :: (Int32 -> Int32 -> (Int32, Maybe Int32)) -> Operation
 regImmDes op (Proc regs _) ram args = do
   let (ix0,     args')      = decode Unsigned 4 args
       (mode0,   args'')     = decode Unsigned 1 args'
@@ -19,19 +20,26 @@ regImmDes op (Proc regs _) ram args = do
   writeIORef des (value `op` imm)
   return Continue
 
-regRegDesF :: (Float -> Float -> Float) -> Operation
-regRegDesF op = regRegDes \i0 i1 -> unsafeCoerce $ unsafeCoerce i0 `op` unsafeCoerce i1
+addi, andi, divi, muli, ori, rli, rri, sli, sri, srai, xori :: Operation
 
-addi, andi, divi, muli, ori, xori :: Operation
+addi = regImmDes adde
 
-addi = regImmDes (+)
+andi = regImmDes $ extra (.&.)
 
-andi = regImmDes (.&.)
+divi = regImmDes dive
 
-divi = regImmDes div
+muli = regImmDes mule
 
-muli = regImmDes (*)
+ori = regImmDes $ extra (.|.)
 
-ori = regImmDes (.|.)
+rli = regImmDes $ extra rotateL
 
-xori = regImmDes xor
+rri = regImmDes $ extra rotateR
+
+sli = regImmDes $ extra shiftL
+
+sri = regImmDes $ extra \i0 i1 -> fromIntegral $ (fromIntegral i0 :: Word32) `shiftR` (fromIntegral i1 :: Word32)
+
+srai = regImmDes $ extra shiftR
+
+xori = regImmDes $ extra xor

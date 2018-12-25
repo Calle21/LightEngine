@@ -19,7 +19,7 @@ assemble path = do contents <- listDirectory' path
                    else
                      error "Could not find 'Main.s'"
   where
-  getFileSize :: C.ByteString -> Int32
+  getFileSize :: Integral a => C.ByteString -> a
   getFileSize s | C.null s  = 0
                 | otherwise = let (filled,s') = isLineFilled s
                               in fromIntegral (fromEnum filled) + getFileSize s'

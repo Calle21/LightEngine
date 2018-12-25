@@ -1,6 +1,6 @@
-module Emulator.Operations.La where
+module Emulator.Operations.La.32Bit where
 
-import Types
+import Types.32Bit
 import Ubi
 
 la :: Operation
