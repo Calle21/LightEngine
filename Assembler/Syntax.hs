@@ -9,28 +9,49 @@ import Ubi
 tokChar :: Char -> Bool
 tokChar c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '[' || c == ']' || c == '-' || c == '+'
 
+ -- Op syntax
+
+opSyntax = packIt [(["abs","fact","not","move", "swap"]
+                    , place ++ place)
+                 , (["acos","add","asin","atan","cos","div","exp","log","max","min","mul","sin","sub","tan"]
+                    , concat $ replicate 3 tplace)
+                 , (["addi","andi","divi","expi","maxi","mini","muli","ori","xori"]
+                    , place ++ simm ++ place)
+                 , (["and","or","rl","rr","sl","sr","sra","xor"]
+                    , concat $ replicate 3 place)
+                 , (["branch"], [1,3]) -- Plus special
+                 , (["call", "la"], [58])
+                 , (["clearbit","setbit","togglebit"]
+                    , place ++ bit ++ place)
+                 , (["convert"], tplace ++ tplace)
+                 , (["device"], dtype ++ replicate 6 place)
+                 , (["return","wait"], place)
+                 , (["rli","rri","sli","sri","srai"]
+                    , place ++ shift ++ place)]
+  where
+  packIt :: [([String], [Int])] -> Array Int (Array Int C.ByteString, Array Int Int)
+  packIt xs = listToArray (map packTuple xs)
+    where
+    packTuple (a,b) = (listToArray (map C.pack a), listToArray b)
+  bit, dtype, imm, jump, place, shift, simm, tplace, vtype :: [Int]
+  bit    = [6]
+  dtype  = [10]
+  imm    = [16]
+  jump   = [16]
+  place  = [4,1,4]
+  shift  = [6]
+  simm   = [6,16]
+  tplace = [2,4,1,4]
+  vtype  = [2]
+
  -- Reserved
 
 branch, opcode :: C.ByteString -> Maybe Int
 
 branch s = s `elemIndex'` branches
 
-branches = listArray (0,15) (map C.pack ["al"
-                                       , "eq"
-                                       , "eqi"
-                                       , "ez"
-                                       , "ge"
-                                       , "gef"
-                                       , "gei"
-                                       , "geu"
-                                       , "gt"
-                                       , "gtf"
-                                       , "gti"
-                                       , "gtu"
-                                       , "gtz"
-                                       , "lei"
-                                       , "lti"
-                                       , "ltz"]
+branches = listToArray (map C.pack ["al" , "bit" , "eq" , "eqi"
+                                  , "gt" , "gti" , "lt" , "lti"]
 
 firmCode s = s `elemIndex'` firmCodes
 
