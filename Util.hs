@@ -4,6 +4,12 @@ import qualified Data.ByteString.Char8 as C
 import Types
 import Ubi
 
+decode :: DecodeType -> Int -> Int64 -> (Int64,Int64)
+decode Unsigned amount value = (shiftR value (64 - amount), shiftL value amount)
+decode Signed   amount value = let sign    = value .&. minBound
+                                   cleared = clearBit value 63
+                               in (sign .|. cleared `shiftR` (64 - amount), shiftL value amount)
+
 elemIndex' :: C.ByteString -> Array Int C.ByteString -> Maybe Int
 elemIndex' s arr = loop (bounds arr)
   where
@@ -12,8 +18,31 @@ elemIndex' s arr = loop (bounds arr)
               | arr ! i == s = Just i
               | otherwise    = loop (i + 1,hi)
 
+getJump :: Int64 -> Int64
+getJump v = fst $ decode Signed 16 v
+
+getPlace :: Int64 -> Regs -> Ram -> IO (Reg, Int64)
+getPlace args regs ram = do
+  let (ix,         args')    = decode Unsigned 5 args
+      (offsetMode, args'')   = decode Unsigned 1 args'
+      (depth,      args''')  = decode Unsigned 1 args''
+      (offset,     args'''') = decode Unsigned 5 args'''
+  offset' <- case offsetMode of
+               0 -> offset
+               1 -> readIORef (regs ! offset)
+  reg <- get (regs ! ix) depth offset'
+  return (reg, args'''')
+  where
+  get :: Reg -> Int64 -> Int64 -> IO Register
+  get reg 0     _      = return reg
+  get reg 1     offset = do addr <- (+offset) `fmap` readIORef reg
+                            return $ ram ! addr
+
 listDirectory' :: FilePath -> IO [FilePath]
 listDirectory' path = map (path </>) `fmap` listDirectory path
+
+listToArray :: [a] -> Array Int64 a
+listToArray xs = listArray (0, length xs - 1) xs
 
 map2 :: (a -> b -> c) -> [a] -> [b] -> [c]
 map2 _  []     []     = []

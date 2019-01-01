@@ -1,33 +1,52 @@
+abs
+acos
 add
-addf
+asin
+atan
 addi
 and
 andi
 branch
 call
+clearbit
+convert
+cos
+device
 div
-divf
 divi
 exp
 expi
+fact
 la
+log
 max
-maxf
+maxi
 min
-minf
+mini
+move
 mul
-mulf
 muli
-multi
+not
 or
 ori
+return
 rl
+rli
 rr
+rri
+setbit
+sin
 sl
+sli
 sr
+sri
 sra
+srai
 sub
-subf
+swap
+tan
+togglebit
+wait
 xor
 xori
 
@@ -35,34 +54,13 @@ branch:
   al
   bit
   eq
-  eqf
   eqi     
-  ez
   gt
-  gtf
   gti
-  gtu
-  gtz
   lt
-  ltf
   lti
-  ltu
-  ltz
 
-firm:
+special:
   putChar
   readChar
   ...
-
-multi:
-  convert
-  fact
-  short
-   return
-   rli
-   rri
-   sli
-   sri
-   srai
-   wait
-  special
