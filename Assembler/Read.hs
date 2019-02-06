@@ -4,26 +4,27 @@ import qualified Data.ByteString.Char8 as C
 import Ubi
 import Util
 
-data Token = Branch Int32
+data Token = Branch Int64
            | Comma
            | Comment
-           | Firm Int32
-           | Label Int32
+           | Firm Int64
+           | Label Int64
            | Minus
-           | Number Int32 Int
-           | Offset Int32
-           | Op Int32
+           | Number Int64 Int
+           | Offset Int64
+           | Op Int64
            | Plus
 
-read' :: [(C.ByteString,Int)] -> String -> C.ByteString -> [Int32]
-read' symbolTable filename = loop 1
+read' :: String -> C.ByteString -> [Int64]
+read' filename = loop 1
   where
-  loop :: Int -> C.ByteString -> [Int32]
-  loop ln s = let (s',dropped) = dropEmptyLines 1 s
-              in if C.null s' then []
-                 else let (toks,s'') = getALine [] s'
-                          toks'      = checkOp toks
-                      in concatenateToks toks' : loop (ln + dropped) s''
+  loop :: Int -> C.ByteString -> [Int64]
+  loop ln s = let (s',dropped, t) = dropEmptyLines 0 s
+              in case t of
+                   Nothing -> []
+                   Just t  -> let (toks,s'') = getALine [t] s'
+                                  toks'      = checkOp toks
+                              in concatenateToks toks' : loop (ln + dropped) s''
     where
     checkOp :: [Token] -> [Token]
     checkOp [Label addr] = [Number (fromJust $ opcode (C.pack "call")) 5, Number addr 26]
@@ -38,7 +39,7 @@ read' symbolTable filename = loop 1
       checkArgs [Comma]                        = readError filename ln (C.pack "Comma at end of line")
       checkArgs [x]                            = [x]
       checkArgs []                             = []
-    concatenateToks :: [Token] -> Int32
+    concatenateToks :: [Token] -> Int64
     concatenateToks toks = let raw = map toNumber toks
                            in if sumOn (\Number _ size -> size) raw == 32
                               then foldl' (\prev (Number n s) -> prev `shiftL` s .|. n) 0 raw
@@ -50,17 +51,18 @@ read' symbolTable filename = loop 1
       toNumber (Label addr)    = Number addr 20
       toNumber (Firm n)        = Number n 4
       toNumber _               = readError filename ln (C.pack "Bad token (expected branch type, num, label or firmware code)")
-    dropEmptyLines :: Int -> C.ByteString -> (C.ByteString, Int)
-    dropEmptyLines dropped s = let (t,s') = getNextTokenOnLine s
-                               in case t of
-                                    Nothing -> dropEmptyLines (dropped + 1) s'
-                                    Just _  -> (s,dropped)
+    dropEmptyLines :: Int -> C.ByteString -> (C.ByteString, Int, Maybe Token)
+    dropEmptyLines dropped s | C.null s  = (s, dropped, Nothing)
+                             | otherwise = let (t,s') = getNextTokenOnLine s
+                                           in case t of
+                                                Nothing -> dropEmptyLines (dropped + 1) s'
+                                                t       -> (s',dropped,t)
     getALine :: [Token] -> C.ByteString -> ([Token],C.ByteString)
     getALine acc s = case getNextTokenOnLine s of
                        (Nothing,s') -> (reverse acc, s')
                        (Just t, s') -> getALine (t : acc) s'
     getNextTokenOnLine :: C.ByteString -> (Maybe Token,C.ByteString)
-    getNextTokenOnLine s = let s' = C.dropWhile (==' ') s
+    getNextTokenOnLine s = let s' = C.dropWhile whiteSpace s
                            in if C.null s' || C.head s' == '\n' then (Nothing,safeTail' s')
                               else if C.head s' == ',' then (Just Comma, C.tail s')
                               else let (ts,s'') = C.span tokChar s'

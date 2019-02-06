@@ -4,11 +4,25 @@ import qualified Data.ByteString.Char8 as C
 import Types
 import Ubi
 
+ -- Decode
+
 decode :: DecodeType -> Int -> Int64 -> (Int64,Int64)
 decode Unsigned amount value = (shiftR value (64 - amount), shiftL value amount)
 decode Signed   amount value = let sign    = value .&. minBound
                                    cleared = clearBit value 63
                                in (sign .|. cleared `shiftR` (64 - amount), shiftL value amount)
+
+ -- dropEmptyLines
+
+dropEmptyLines :: C.ByteString -> (C.ByteString, Int)
+dropEmptyLines = rec (1 :: Int)
+  where
+  rec n s = let (t,s') = getNextTokenOnLine s
+            in case t of
+                 Nothing -> rec (dropped + 1) s'
+                 Just _  -> (s,dropped)
+
+ -- ElemIndex
 
 elemIndex' :: C.ByteString -> Array Int C.ByteString -> Maybe Int
 elemIndex' s arr = loop (bounds arr)
@@ -59,3 +73,8 @@ safeTail' s | C.null s  = s
 sumOn :: Num b => (a -> b) -> [a] -> b
 sumOn _  []     = 0
 sumOn fn (x:xs) = fn x + sumOn fn xs
+
+ -- whiteSpace
+
+whiteSpace :: Char -> Bool
+whiteSpace c = c == ' ' || c == '\t'
