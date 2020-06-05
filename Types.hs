@@ -1,20 +1,61 @@
 module Types where
 
-import qualified Data.Map.Strict as M
 import Ubi
 
-data DecodeType = Signed | Unsigned
+type Checked = Lexed
 
-type Operation = Processor -> RAM -> Int32 -> IO Signal
+type Clean = (Int64,[Int64],[[Int64]])
 
-data Processor = Proc Regs (M.Map Int32 (IO Int32))
+type Compact = (Int64, [Int64])
 
-type Reg = IORef Int32
+type Concat = Replaced
 
-type Regs = RAM
+type ExeFunc = [Int64] -> RAM -> Proc -> IO Sig
 
-type RAM = Array Int32 Reg
+type GotLabs = (SymTable,[Token],Checked)
 
-type Register = IORef Int32
+type Lexed = [[Token]]
 
-data Signal = Continue | Return Int32
+type Proc = RAM
+
+type Replaced = Tidy
+
+type RAM = Array Int64 (IORef Int64)
+
+data Sig = Continue | Exit
+
+type Split = (Checked,Checked)
+
+type SymTable = [(String,Int64)]
+
+data Syn = RG | IN | LB | AD
+
+type Tidy = Split
+
+data Token = Addr String Int64
+           | Arrow
+           | Comma
+           | Glab String
+           | INum Int64
+           | Llab String
+           | Minus
+           | Name String
+           | Plus
+           | Reg Int64
+           | Space Int64
+           | Str String
+           deriving (Eq, Show)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

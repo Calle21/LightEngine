@@ -1,10 +1,10 @@
-ret; in0;
-   store 1 -> ret
+@factorial
+   li    1 -> $1 ; return value
 loop:
-   beq   in0, 1 -> end ; ?
-   (acc) <- mul (ret, in0)
-      move  acc -> ret
-   dec   in0
+   beq   $0, $1 -> end
+   mul   $0, $1 -> $1
+   addi  $0, -1 -> $0
    b     loop
 end:
-   return
+   move  $1 -> $0
+   br    $13

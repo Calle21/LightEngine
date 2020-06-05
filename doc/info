@@ -1,60 +1,25 @@
 Machine code:
-  6  bits > opcode
-  58 bits > args
+  5  bits > opcode
+  59 bits > args
 
 Registers:
-  0-11  - General purpose
-  12    - Sp
-  13-14 - Fetch
+  0-11  - temporary
+  12    - sp
+  13    - link
+  14    - fetch
   15    - ic
 
- type   = signed, unsigned, float, ratio
- tplace = type, place (11bit)
- place  = reg, mode, offset (9bit)
- simm   = shift, imm
- jump   = imm
+Instruction types
+  4,4 : not, move
 
-Instr:
-  abs, fact, not, move, swap:
-    2place
+  4,4,4 : add, and, div, mul, or, sl, sr, sra, sub, xor
 
-  acos, add, asin, atan, cos, div, exp, log, max, min, mul, sin, sub, tan:
-    3tplace
+  55,4 : la, li
 
-  addi, andi, divi, expi, maxi, mini, muli, ori, xori:
-    place, simm, place
+  4,51,4 : addi, andi, divi, muli, ori, sli, sri, srai, xori
 
-  and, or, rl, rr, sl, sr, sra, xor:
-    3place
+  59 : b, br
+     
+  4,4,51 : beq, bgt, bge
 
-  branch:
-    negate, type, args
-   al:
-     jump
-   bit:
-     place, bit, jump 
-   eq, gt, lt:
-     type, 2place, jump
-   eqi, gti, lti:
-     place, imm, jump
-
-  call:
-    addr + numPush, numArg, startReg, par, 6place + (numArg-6)/6 place
-
-  clearbit, setbit, tooglebit:
-    place, bit, place
-
-  convert:
-    2tplace
-
-  device:
-    type, 6place
-
-  la:
-    addr
-
-  return, wait:
-    place
-
-  rli, rri, sli, sri, srai:
-    place, shift, place
+  4,16,39 : beqi, bgti, bgei

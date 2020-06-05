@@ -1,0 +1,1 @@
+lex' -> check -> split -> tidy -> replace -> getlabs -> concat -> clean -> compact

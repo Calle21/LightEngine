@@ -1,20 +1,41 @@
 module Main where
 
-import qualified LightEngine.24Bit as Small
-import qualified LightEngine.32Bit as Mid
-import qualified LightEngine.40Bit as Big
+import Assembler.Check (check)
+import Assembler.Clean (clean)
+import Assembler.Compact (compact)
+import Assembler.Concat (concat')
+import Assembler.GetLabs (getLabs)
+import Assembler.Lex (lex')
+import Assembler.Prepare (prepare)
+import Assembler.Replace (replace)
+import Assembler.Split (split)
+import Assembler.Tidy (tidy)
+import Execute.Execute (execute)
+import Types
 import Ubi
+import Util
 
 main :: IO ()
-main = do args <- getArgs
-          case args of
-            ["24", path] -> case doesDirectoryExist path of
-                              True  -> Small.assemble path >>= Small.execute
-                              False -> Small.readFile' path >>= Small.execute
-            ["32", path] -> case doesDirectoryExist path of
-                              True  -> Mid.assemble path >>= Mid.execute
-                              False -> Mid.readFile' path >>= Mid.execute
-            ["40", path] -> case doesDirectoryExist path of
-                              True  -> Big.assemble path >>= Big.execute
-                              False -> Big.readFile' path >>= Big.execute
-            _            -> C.putStrLn (C.pack "Try 'LightEngine xx *path*' where (xx) marks architecture (24, 32 or 40) and *path* points to an executable file or directory containing source files")
+main = do [path, test] <- getArgs
+          dir          <- doesDirectoryExist path
+          sourcePaths  <- case dir of
+                           True  -> do contents <- listDir path
+                                       return $ filter (\p -> takeExtension p == ".s") contents
+                           False -> return [path]
+          strings     <- mapM readFile sourcePaths
+          let lexed     = map lex' (zip (map takeFileName sourcePaths) strings)
+              checked   = map check lexed
+              split'    = map split checked
+              tidy'     = map tidy split'
+              replaced  = map replace tidy'
+              concat''  = concat' replaced
+              gotLabs   = getLabs concat''
+              cleaned   = clean gotLabs
+              compacted = compact cleaned
+          ram <- prepare compacted
+          case test of
+            "t" -> print cleaned
+            "r" -> execute ram
+
+listDir :: FilePath -> IO [FilePath]
+listDir path = map (path </>) `fmap` listDirectory path

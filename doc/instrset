@@ -1,41 +1,18 @@
-abs
-acos
 add
-asin
-atan
 addi
 and
 andi
-branch
-call
-clearbit
-convert
-cos
 device
 div
 divi
-exp
-expi
-fact
 la
-log
-max
-maxi
-min
-mini
+lw
 move
 mul
 muli
 not
 or
 ori
-return
-rl
-rli
-rr
-rri
-setbit
-sin
 sl
 sli
 sr
@@ -43,22 +20,21 @@ sri
 sra
 srai
 sub
-swap
-tan
-togglebit
+subi
+sw
 wait
 xor
 xori
 
 branch:
-  al
-  bit
+  
+  r
   eq
   eqi     
   gt
   gti
-  lt
-  lti
+  ge
+  gei
 
 special:
   putChar
