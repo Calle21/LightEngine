@@ -4,7 +4,7 @@ import Types
 import Ubi
 import Util
 
-prepare :: Compact -> IO (RAM, Proc)
+prepare :: (Int64, [Int64]) -> IO (RAM, Proc)
 prepare (main,ls) = do hSetBuffering stdout NoBuffering
                        ls'  <- mapM newIORef ls
                        proc <- getProcessor

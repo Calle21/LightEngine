@@ -1,16 +1,18 @@
 module Main where
 
-import Assembler.Check (check)
-import Assembler.Clean (clean)
-import Assembler.Compact (compact)
-import Assembler.Concat (concat')
-import Assembler.GetLabs (getLabs)
-import Assembler.Lex (lex')
-import Assembler.Prepare (prepare)
-import Assembler.Replace (replace)
-import Assembler.Split (split)
-import Assembler.Tidy (tidy)
-import Execute.Execute (execute)
+import Assembler.Check
+import Assembler.Clean
+import Assembler.Compact
+import Assembler.Concat
+import Assembler.GetLabs
+import Assembler.GetRegList
+import Assembler.Lex
+import Assembler.Prepare
+import Assembler.RemovePunct
+import Assembler.Replace
+import Assembler.Split
+import Assembler.Tidy
+import Execute.Execute
 import Types
 import Ubi
 import Util
@@ -23,19 +25,21 @@ main = do [path, test] <- getArgs
                                        return $ filter (\p -> takeExtension p == ".s") contents
                            False -> return [path]
           strings     <- mapM readFile sourcePaths
-          let lexed     = map lex' (zip (map takeFileName sourcePaths) strings)
-              checked   = map check lexed
-              split'    = map split checked
-              tidy'     = map tidy split'
-              replaced  = map replace tidy'
-              concat''  = concat' replaced
-              gotLabs   = getLabs concat''
-              cleaned   = clean gotLabs
-              compacted = compact cleaned
-          ram <- prepare compacted
+          let lexed        = map lex' (zip (map takeFileName sourcePaths) strings)
+              gotRegLists  = map getRegList lexed
+              checked      = map check gotRegLists
+              split'       = map split checked
+              withoutPunct = map removePunct split'
+              tidy'        = map tidy withoutPunct
+              replaced     = map replace tidy'
+              concat''     = concat' replaced
+              gotLabs      = getLabs concat''
+              cleaned      = clean gotLabs
+              compacted    = compact cleaned
+          (ram,proc) <- prepare compacted
           case test of
             "t" -> print cleaned
-            "r" -> execute ram
+            "r" -> execute ram proc
 
 listDir :: FilePath -> IO [FilePath]
 listDir path = map (path </>) `fmap` listDirectory path

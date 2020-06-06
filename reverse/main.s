@@ -1,20 +1,20 @@
 @main
-   la   mem -> $0   ; prepare
-   la   poi -> $1   ;   for
-   sw   $0 -> $1    ;     alloc
+   li   mem -> r0   ; prepare
+   li   poi -> r1   ;   for
+   sw   r0 -> r1    ;     alloc
 
-   li   10 -> $0
-   li   0  -> $1
-   addi $15, 1 -> $13
+   li   10 -> r0
+   li   0 -> r1
+   addi ic, 1 -> link
    b    make
-   sw   $0 -> $12
-   addi $12, 1 -> $12
-   addi $15, 1 -> $13
+   addi sp, 1 -> sp
+   sw   r0 -> sp - 1
+   addi ic, 1 -> link
    b    print
-   addi $12, -1 -> $12
-   lw   $12 -> $0
-   addi $15, 1 -> $13
+   lw   sp - 1 -> r0
+   addi sp, -1 -> sp
+   addi ic, 1 -> link
    b    reverse
-   addi $15, 1 -> $13
+   addi ic, 1 -> link
    b    print
    exit

@@ -1,19 +1,38 @@
 module Assembler.Tidy where
 
+import Assembler.OpInfo (getOpSyntax)
 import Types
 import Ubi
 import Util
 
-tidy :: (FilePath, Split) -> (FilePath, Tidy)
-tidy (filename, (dat,text)) = (filename, (dat,rec text))
+tidy :: (FilePath, RegList, [[Token]], [[Token]]) -> (FilePath, [[Token]], [[Token]])
+tidy (filename, regs, dat, text) = (filename, dat, rec text)
   where
-  rec :: Checked -> Checked
-  rec (x:xs) | head x == Name "la" = (Name "li" : specialCase (tail x)) : rec xs
-             | otherwise           = withoutIf punct x : rec xs
+  rec :: [[Token]] -> [[Token]]
+  rec (x:xs) | isLabLine x = x : rec xs
+             | otherwise   = let (Name s:args) = x
+                                 syn           = fromJust $ getOpSyntax s
+                             in (Name s : recArgs args syn) : rec xs
     where
-    specialCase :: [Token] -> [Token]
-    specialCase args = case args of
-                         [Name s,_,c]              -> [Addr s 0, c]
-                         [Name s,Plus,INum i,_,e]  -> [Addr s i, e]
-                         [Name s,Minus,INum i,_,e] -> [Addr s (negate i), e]
-  rec []     = []
+    recArgs :: [Token] -> [Syn] -> [Token]
+    recArgs xs (y:ys) = case y of
+                          RG -> case xs of
+                                  (Name s:xs') -> case s `lookup` regs of
+                                                    Just i -> Reg i : recArgs xs' ys
+                          IM -> head xs : recArgs (tail xs) ys
+                          LB -> head xs : recArgs (tail xs) ys
+                          IA -> case head xs of
+                                  INum _ -> head xs : recArgs (tail xs) ys
+                                  Name s -> Addr s : recArgs (tail xs) ys
+                          PL -> case xs of
+                                  (Name s:Plus:INum i:xs')  -> case s `lookup` regs of
+                                                                 Just i0 -> Place i0 i : recArgs xs' ys
+                                  (Name s:Minus:INum i:xs') -> case s `lookup` regs of
+                                                                 Just i0 -> Place i0 (negate i) : recArgs xs' ys
+                                  (Name s:xs')              -> case s `lookup` regs of
+                                                                 Just i -> Place i 0 : recArgs xs' ys
+                          SC -> case head xs of
+                                  Name s -> case getSyscall s of
+                                              Just i -> INum i : recArgs (tail xs) ys
+    recArgs [] [] = []
+  rec [] = []

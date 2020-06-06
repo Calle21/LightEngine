@@ -5,14 +5,12 @@ import Types
 import Ubi
 import Util
 
-type OpInfo = ([(String,ExeFunc)],[Syn],[Int64])
-
 getOpi :: String -> Int64
 getOpi s = rec 0 opInfo
   where
   rec :: Int64 -> [OpInfo] -> Int64
-  rec count ((ss,_,_):xs) = case recRec count ss of
-                              Left i  -> rec i xs
+  rec count ((xs,_,_):ys) = case recRec count xs of
+                              Left i  -> rec i ys
                               Right i -> i
     where
     recRec :: Int64 -> [(String,ExeFunc)] -> Either Int64 Int64
@@ -24,9 +22,9 @@ getPackSyntax :: Int64 -> [Int64]
 getPackSyntax op = rec op opInfo
   where
   rec :: Int64 -> [OpInfo] -> [Int64]
-  rec count ((ss,_,syn):xs) = let count' = count - fromIntegral (length ss)
+  rec count ((xs,_,syn):ys) = let count' = count - fromIntegral (length xs)
                               in if count' < 0 then syn
-                                 else rec count' xs
+                                 else rec count' ys
 
 fetchOperation :: Int64 -> ExeFunc
 fetchOperation i = rec i opInfo
@@ -37,16 +35,15 @@ fetchOperation i = rec i opInfo
                    Left i'  -> rec i' xs
     where
     get :: Int64 -> OpInfo -> Either Int64 ExeFunc
-    get i (ss,_,_) | i < fromIntegral (length ss) = Right $ snd $ ss !! fromIntegral i
-                   | otherwise                    = Left (i - fromIntegral (length ss))
+    get i (xs,_,_) | i < fromIntegral (length xs) = Right $ snd $ xs !! fromIntegral i
+                   | otherwise                    = Left (i - fromIntegral (length xs))
 
 getOpSyntax :: String -> Maybe [Syn]
-getOpSyntax s | s == "la" = Just [AD,RG]
-              | otherwise = rec opInfo
+getOpSyntax s = rec opInfo
   where
   rec :: [OpInfo] -> Maybe [Syn]
-  rec ((ss,syn,_):xs) | s `elem1` ss = Just syn
-                      | otherwise    = rec xs
+  rec ((xs,syn,_):ys) | s `elem1` xs = Just syn
+                      | otherwise    = rec ys
     where
     elem1 :: String -> [(String,ExeFunc)] -> Bool
     elem1 s0 ((s1,_):xs) | s0 == s1  = True
@@ -56,9 +53,7 @@ getOpSyntax s | s == "la" = Just [AD,RG]
 
 opInfo :: [OpInfo]
 opInfo = [([("not", regReg complement)
-           ,("move", regReg id)
-           ,("lw", lw)
-           ,("sw", sw)]
+           ,("move", regReg id)]
            ,[RG,RG]
            ,[4,4])
          ,([("add", regRegReg (+))
@@ -73,7 +68,7 @@ opInfo = [([("not", regReg complement)
            ,("xor", regRegReg xor)]
            ,[RG,RG,RG]
            ,[4,4,4])
-         ,([("li",li)],[IN,RG],[55,4])
+         ,([("li",li)],[IA,RG],[55,4])
          ,([("addi", regImmDes (+))
            ,("andi", regImmDes (.&.))
            ,("ori", regImmDes (.|.))
@@ -81,8 +76,10 @@ opInfo = [([("not", regReg complement)
            ,("sri", regImmDes (\i0 i1 -> fromIntegral $ (fromIntegral i0 :: Word64) `shiftR` fromIntegral i1))
            ,("srai", regImmDes (\i0 i1 -> i0 `shiftR` fromIntegral i1))
            ,("xori", regImmDes xor)]
-           ,[RG,IN,RG]
+           ,[RG,IM,RG]
            ,[4,51,4])
+         ,([("lw", lw)],[PL,RG],[4,51,4])
+         ,([("sw", sw)],[RG,PL],[4,4,51])
          ,([("b",b)],[LB],[59])
          ,([("br",br)],[RG],[4])
          ,([("beq", bRegReg (==))
@@ -93,7 +90,7 @@ opInfo = [([("not", regReg complement)
          ,([("beqi", bRegImm (==))
            ,("bgti", bRegImm (<))
            ,("bgei", bRegImm (<=))]
-           ,[RG,IN,LB]
+           ,[RG,IM,LB]
            ,[4,16,39])
          ,([("exit",exit)],[],[])
-         ,([("syscall",syscall)],[IN],[59])]
+         ,([("syscall",syscall)],[SC],[59])]

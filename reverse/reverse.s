@@ -1,13 +1,12 @@
+current, prev, nxt
 @reverse
-    li   0 -> $1
+    li   0 -> prev
 loop:
-    addi $0, 1 -> $0
-    lw   $0 -> $2
-    sw   $1 -> $0
-    beqi $2, 0 -> end
-    addi $0, -1 -> $1
-    move $2 -> $0
+    lw   current + 1 -> nxt
+    sw   prev -> current + 1
+    beqi nxt, 0 -> end
+    move current -> prev
+    move nxt -> current
     b    loop
 end:
-    addi $0, -1 -> $0
-    br   $13
+    br   link

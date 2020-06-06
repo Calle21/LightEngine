@@ -1,38 +1,38 @@
-module Assembler.Lex where
+module Assembler.Lex (lex') where
 
 import Types
 import Ubi
 import Util
 
-lex' :: (FilePath, String) -> (FilePath, Lexed)
-lex' (filename,s) = (filename, withoutIf null $ lexLines 1 $ lines s)
+lex' :: (FilePath, String) -> (FilePath, [[Token]])
+lex' (filename,s) = (filename, lexLines 1 $ lines s)
   where
-  lexLines :: Int -> [String] -> Lexed
-  lexLines _    []     = []
-  lexLines line (x:xs) = lexLine x : lexLines (line + 1) xs
+  lexLines :: Int -> [String] -> [[Token]]
+  lexLines line (x:xs) = case lexLine x of
+                           []  -> lexLines (line + 1) xs
+                           xs' -> xs' : lexLines (line + 1) xs
     where
     lexLine :: String -> [Token]
-    lexLine s = let s' = dropWhile ws s
-                in if null s' then []
-                   else case head s' of
-                          ','  -> Comma : lexLine (tail s')
-                          ';'  -> []
-                          '"'  -> let (st,s'') = getString [] (tail s')
-                                  in Str st : lexLine s''
-                          c    -> if nonPunct c
-                                  then let (ts,s'') = span nonPunct s'
-                                           tok | arrowSyntax ts   = Arrow
-                                               | glabSyntax ts    = Glab $ tail ts
-                                               | inumSyntax ts    = INum $ read ts
-                                               | llabSyntax ts    = Llab $ init ts
-                                               | minusSyntax ts   = Minus
-                                               | nameSyntax ts    = Name ts
-                                               | plusSyntax ts    = Plus
-                                               | regSyntax ts     = Reg $ read (tail ts)
-                                               | spaceSyntax ts   = Space $ read $ init $ tail ts
-                                               | otherwise        = aerror filename line ("Bad token : " ++ ts)
-                                       in tok : lexLine s''
-                                  else aerror filename line ("Illegal character : " ++ [c])
+    lexLine s = case dropWhile ws s of
+                  []     -> []
+                  (x:xs) -> case x of
+                              ',' -> Comma : lexLine xs
+                              ';' -> []
+                              '"' -> let (st,xs') = getString [] xs
+                                     in Str st : lexLine xs'
+                              _   -> if nonPunct x
+                                     then let (ts,xs') = span nonPunct (x:xs)
+                                              tok | arrowSyntax ts   = Arrow
+                                                  | glabSyntax ts    = Glab $ tail ts
+                                                  | inumSyntax ts    = INum $ read ts
+                                                  | llabSyntax ts    = Llab $ init ts
+                                                  | minusSyntax ts   = Minus
+                                                  | nameSyntax ts    = Name ts
+                                                  | plusSyntax ts    = Plus
+                                                  | spaceSyntax ts   = Space $ read $ init $ tail ts
+                                                  | otherwise        = aerror filename line ("Bad token : " ++ ts)
+                                          in tok : lexLine xs'
+                                     else aerror filename line ("Illegal character : " ++ [x])
       where
       getString :: String -> String -> (String, String)
       getString acc (x:xs) | x == '\\' = case xs of
@@ -45,6 +45,7 @@ lex' (filename,s) = (filename, withoutIf null $ lexLines 1 $ lines s)
                            | x == '"'  = (reverse $ '\0' : acc,xs)
                            | otherwise = getString (x : acc) xs
       getString _   []     = aerror filename line "Couldn't find end of string"
+  lexLines _ [] = []
       
 nonPunct :: Char -> Bool
 nonPunct c = labChar c || c == '@' || c == ':' || c == '|' || c == '$' || c == '-' || c == '>' || c == '+'
@@ -72,8 +73,6 @@ nameSyntax s = not (null s) && all labChar s
 llabSyntax s = not (null s) && nameSyntax (init s) && last s == ':'
 
 plusSyntax s = s == "+"
-
-regSyntax s = not (null s) && head s == '$' && unsignedSyntax (tail s)
 
 spaceSyntax s = not (null s) && head s == '|' && last s == '|' && unsignedSyntax (init $ tail s)
 

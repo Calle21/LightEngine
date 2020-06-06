@@ -1,21 +1,16 @@
 @cons
-    sw   $0 -> $12
-    addi $12, 1 -> $12
-    sw   $1 -> $12
-    addi $12, 1 -> $12
-    sw   $13 -> $12
-    addi $12, 1 -> $12
-    li   2 -> $0
-    addi $15, 1 -> $13
+    addi sp, 3 -> sp
+    sw   r0 -> sp - 3
+    sw   r1 -> sp - 2
+    sw   link -> sp - 1
+    li   2 -> r0
+    addi ic, 1 -> link
     b    alloc
-    addi $12, -1 -> $12
-    lw   $12 -> $13
-    addi $12, -1 -> $12
-    lw   $12 -> $2
-    addi $12, -1 -> $12
-    lw   $12 -> $1
-    sw   $1 -> $0
-    addi $0, 1 -> $1
-    sw   $2 -> $1
-    br   $13
+    lw   sp - 1 -> link
+    lw   sp - 2 -> r2
+    lw   sp - 3 -> r1
+    addi sp, -3 -> sp
+    sw   r1 -> r0
+    sw   r2 -> r0 + 1
+    br   link
 

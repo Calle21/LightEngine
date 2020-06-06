@@ -1,23 +1,20 @@
-module Assembler.Check where
+module Assembler.Check (check) where
 
 import Assembler.OpInfo (getOpSyntax)
 import Types
 import Ubi
 import Util
 
-check :: (FilePath, Lexed) -> (FilePath, Checked)
-check (filename, file) = (filename, ch 1 file)
+check :: (FilePath, RegList, [[Token]]) -> (FilePath, RegList, [[Token]])
+check (filename, regs, file) = (filename, regs, ch 1 file)
   where
-  ch :: Int -> Lexed -> Checked
+  ch :: Int -> [[Token]] -> [[Token]]
   ch line (x:xs) | isDataLine x || isLabLine x || isInstrLine x = ch (line + 1) xs
     where
-    isLabLine :: [Token] -> Bool
-    isLabLine [x] = isLab x
-    isLabLine _   = False
     isInstrLine :: [Token] -> Bool
-    isInstrLine (Name s:xs) = case getOpSyntax s of
-                                  Just syn -> rec xs syn
-                                  Nothing  -> aerror filename line ("Not an opcode : " ++ s)
+    isInstrLine (Name s:args) = case getOpSyntax s of
+                                       Just syn -> rec args syn
+                                       Nothing  -> aerror filename line ("Not an opcode : " ++ s)
       where
       rec :: [Token] -> [Syn] -> Bool
       rec xs (y:ys) = let xs' = synMatch xs y
@@ -27,28 +24,38 @@ check (filename, file) = (filename, ch 1 file)
                                    (Arrow:xs'') -> rec xs'' ys
                                    _            -> aerror filename line "Expected an arrow"
                            2  -> case xs' of
-                                  (Comma:xs'') -> rec xs'' ys
-                                  _            -> aerror filename line "Expected a comma"
+                                   (Comma:xs'') -> rec xs'' ys
+                                   _            -> aerror filename line "Expected a comma"
         where
         synMatch :: [Token] -> Syn -> [Token]
         synMatch xs y = case y of
                           RG  -> case xs of
-                                   (Reg i:xs')  -> if i <= 15 then xs'
-                                                   else aerror filename line "Only 16 registers"
-                                   _            -> aerror filename line "Expected a reg"
+                                   (Name s:xs') -> case s `lookup` regs of
+                                                     Just _  -> xs'
+                                                     Nothing -> error filename line ("That was not a name for any register : " ++ s)
+                                   _            -> aerror filename line "Expected a name for a register"
                           LB  -> case xs of
                                    (Name _:xs') -> xs'
-                                   _            -> aerror filename line "Expected a labname"
-                          IN  -> case xs of
+                                   _            -> aerror filename line "Expected a name for lab"
+                          IM  -> case xs of
                                    (INum _:xs') -> xs'
                                    _            -> aerror filename line "Expected an integer"
-                          AD  -> case xs of
+                          IA  -> case xs of
+                                   (INum i:xs') -> xs'
+                                   (Name _:xs') -> xs'
+                                   _            -> aerror filename line "Expected integer or name for li"
+                          PL  -> case xs of
                                    (Name _:xs') -> case xs' of
                                                      (Plus:INum _:xs'')  -> xs''
                                                      (Minus:INum _:xs'') -> xs''
                                                      _                   -> xs'
-                                   _            -> aerror filename line "Expected a labname for address"
+                                   _            -> aerror filename line "Expected a name for a place"
+                          SC  -> case xs of
+                                   (Name s:xs') -> case getSyscall s of
+                                                     Just _  -> xs'
+                                                     Nothing -> aerror filename line ("That was not an argument for syscall : " ++ s)
+                                   _            -> aerror filename line "Expected a name for a syscall"
       rec [] [] = True
-      rec _  _  = aerror filename line "Too many / few tokens on line"
+      rec _  [] = aerror filename line "Too many tokens on line"
     isInstrLine (_:_) = aerror filename line "Expected an opcode"
   ch _ [] = file

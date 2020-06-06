@@ -4,5 +4,5 @@ import Types
 import Ubi
 import Util
 
-concat' :: [Replaced] -> Concat
+concat' :: [([[Token]],[[Token]])] -> ([[Token]],[[Token]])
 concat' files = (concat $ map fst files, concat $ map snd files)

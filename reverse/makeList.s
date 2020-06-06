@@ -1,15 +1,15 @@
 @make
-    sw   $13 -> $12
-    addi $12, 1 -> $12
-    addi $15, 1 -> $13
+    addi sp, 1 -> sp
+    sw   link -> sp - 1
+    addi ic, 1 -> link
     b    cons
-    addi $12, -1 -> $12
-    lw   $12 -> $13
-    move $0 -> $1
-    lw   $1 -> $0
-    beqi $0, 0 -> end
-    addi $0, -1 -> $0
+    lw   sp - 1 -> link
+    addi sp, -1 -> sp
+    move r0 -> r1
+    lw   r1 -> r0
+    beqi r0, 0 -> end
+    addi r0, -1 -> r0
     b    make
 end:
-    move $1 -> $0
-    br   $13
+    move r1 -> r0
+    br   link

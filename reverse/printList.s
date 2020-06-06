@@ -1,10 +1,12 @@
 @print
-    move $0 -> $1
-    lw   $1 -> $0
-    syscall 2
-    addi $1, 1 -> $1
-    lw   $1 -> $0
-    beqi $0, 0 -> end
-    b    print
+    move r0 -> r1
+loop:
+    lw   r1 -> r0
+    syscall pInt
+    li   32 -> r0
+    syscall pChar
+    lw   r1 + 1 -> r1
+    beqi r1, 0 -> end
+    b    loop
 end:
-    br   $13
+    br   link

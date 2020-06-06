@@ -4,7 +4,8 @@ import Types
 import Ubi
 import Util
 
-regRegReg, regImmDes :: (Int64 -> Int64 -> Int64) -> [Int64] -> RAM -> Proc -> IO Sig
+regRegReg, regImmDes :: (Int64 -> Int64 -> Int64) -> ExeFunc
+
 regRegReg fn [r0,r1,des] _ proc = do r0' <- readIORef (proc ! r0)
                                      r1' <- readIORef (proc ! r1)
                                      let des' = r0' `fn` r1'
@@ -16,25 +17,29 @@ regImmDes fn [r0,imm,des] _ proc = do r0'  <- readIORef (proc ! r0)
                                       writeIORef (proc ! des) des'
                                       return Continue
 
-regReg :: (Int64 -> Int64) -> [Int64] -> RAM -> Proc -> IO Sig
+regReg :: (Int64 -> Int64) -> ExeFunc
+
 regReg fn [r,des] _ proc = do r' <- readIORef (proc ! r)
                               let des' = fn r'
                               writeIORef (proc ! des) des'
                               return Continue
 
 li, lw, sw, exit, b, br, syscall :: ExeFunc
+
 li [imm,des] _ proc = do writeIORef (proc ! des) imm
                          return Continue
 
-lw [r,des] ram proc = do addr <- readIORef (proc ! r)
-                         load <- readIORef (ram ! addr)
-                         writeIORef (proc ! des) load
-                         return Continue
+lw [r,off,des] ram proc = do addr <- readIORef (proc ! r)
+                             let addr' = addr + off
+                             load <- readIORef (ram ! addr')
+                             writeIORef (proc ! des) load
+                             return Continue
 
-sw [r,des] ram proc = do store <- readIORef (proc ! r)
-                         addr  <- readIORef (proc ! des)
-                         writeIORef (ram ! addr) store
-                         return Continue
+sw [r,des,off] ram proc = do addr <- readIORef (proc ! des)
+                             let addr' = addr + off
+                             store <- readIORef (proc ! r)
+                             writeIORef (ram ! addr') store
+                             return Continue
 
 exit _ _ _ = return Exit
 
@@ -45,7 +50,8 @@ br [r] _ proc = do r' <- readIORef (proc ! r)
                    writeIORef (proc ! 15) r'
                    return Continue
 
-bRegReg, bRegImm :: (Int64 -> Int64 -> Bool) -> [Int64] -> RAM -> Proc -> IO Sig
+bRegReg, bRegImm :: (Int64 -> Int64 -> Bool) -> ExeFunc
+
 bRegReg fn [r0,r1,jump] _ proc = do r0' <- readIORef (proc ! r0)
                                     r1' <- readIORef (proc ! r1)
                                     case r0' `fn` r1' of
@@ -63,6 +69,7 @@ syscall [i] ram proc = do let fn = getSyscallFn i
                           fn ram proc
 
 getSyscallFn :: Int64 -> RAM -> Proc -> IO Sig
+
 getSyscallFn i = case i of
                    0  -> pChar
                    1  -> pString
@@ -74,6 +81,7 @@ getSyscallFn i = case i of
                    7  -> rUnsigned
 
 pChar, pString, pInt, pUnsigned, rChar, rString, rInt, rUnsigned :: RAM -> Proc -> IO Sig
+
 pChar _ proc = do c <- readIORef (proc ! 0)
                   let c' = chr $ fromIntegral c
                   putChar c'

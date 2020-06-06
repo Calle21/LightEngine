@@ -6,6 +6,7 @@ module Ubi (
       , module Data.Int
       , module Data.IORef
       , module Data.List
+      , module Data.Maybe
       , module Data.Word
       , module System.Directory
       , module System.Environment
@@ -19,7 +20,8 @@ import Data.Bits
 import Data.Char ( ord, chr )
 import Data.Int 
 import Data.IORef 
-import Data.List 
+import Data.List
+import Data.Maybe
 import Data.Word
 import System.Directory 
 import System.Environment 
