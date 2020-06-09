@@ -8,6 +8,7 @@ module Ubi (
       , module Data.List
       , module Data.Maybe
       , module Data.Word
+      , module Debug.Trace
       , module System.Directory
       , module System.Environment
       , module System.FilePath.Posix
@@ -23,6 +24,7 @@ import Data.IORef
 import Data.List
 import Data.Maybe
 import Data.Word
+import Debug.Trace
 import System.Directory 
 import System.Environment 
 import System.FilePath.Posix
