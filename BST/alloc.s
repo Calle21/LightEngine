@@ -1,12 +1,10 @@
-size, point, current, newc
-
 @mem         |1024|
 @poi         |1|
 
 @alloc
-        li   poi -> point
-        lw   point -> current
-        add  size, current -> newc
-        sw   newc -> point
-        move current -> r0
+        li   poi -> r1
+        lw   r1 -> r2
+        add  r0, r2 -> r3
+        sw   r3 -> r1
+        move r2 -> r0
         br   link

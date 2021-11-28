@@ -1,8 +1,8 @@
 module Execute.Operations where
 
+import Share
 import Types
 import Ubi
-import Util
 
 regRegReg, regImmDes :: (Int64 -> Int64 -> Int64) -> ExeFunc
 
@@ -74,13 +74,13 @@ getSyscallFn i = case i of
                    0  -> pChar
                    1  -> pString
                    2  -> pInt
-                   3  -> pUnsigned
+                   3  -> pFloat
                    4  -> rChar
                    5  -> rString
                    6  -> rInt
-                   7  -> rUnsigned
+                   7  -> rFloat
 
-pChar, pString, pInt, pUnsigned, rChar, rString, rInt, rUnsigned :: RAM -> Proc -> IO Sig
+pChar, pString, pInt, pFloat, rChar, rString, rInt, rFloat :: RAM -> Proc -> IO Sig
 
 pChar _ proc = do c <- readIORef (proc ! 0)
                   let c' = chr $ fromIntegral c
@@ -100,10 +100,9 @@ pInt _ proc = do i <- readIORef (proc ! 0)
                  putStr $ show i
                  return Continue
 
-pUnsigned _ proc = do i <- readIORef (proc ! 0)
-                      let u = fromIntegral i :: Word64
-                      putStr $ show u
-                      return Continue
+pFloat _ proc = do i <- readIORef (proc ! 0)
+                   putStr $ show (unsafeCoerce i :: Double)
+                   return Continue
 
 rChar _ proc = do c <- hGetChar stdin
                   let i = fromIntegral $ fromEnum c :: Int64
@@ -127,7 +126,7 @@ rInt ram proc = do s <- hGetLine stdin
                    writeIORef (proc ! 0) i
                    return Continue
 
-rUnsigned ram proc = do s <- hGetLine stdin
-                        let u = read s :: Word64
-                        writeIORef (proc ! 0) (fromIntegral u)
-                        return Continue
+rFloat ram proc = do s <- hGetLine stdin
+                     let f = read s :: Double
+                     writeIORef (proc ! 0) (unsafeCoerce f)
+                     return Continue

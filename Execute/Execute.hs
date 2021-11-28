@@ -1,9 +1,10 @@
 module Execute.Execute where
 
-import Assembler.OpInfo (fetchOperation, getPackSyntax)
+import Assembler.OpInfo
+import Execute.Operations
+import Share
 import Types
 import Ubi
-import Util
 
 execute :: RAM -> Proc -> IO ()
 execute ram proc = do ic <- readIORef (proc ! 15)
@@ -20,7 +21,7 @@ executeOperation op ram proc = let (op':args) = unpack op
                                in  fetchOperation op' args ram proc
 
 unpack :: Int64 -> [Int64]
-unpack op = let (opi,op') = decode 5 op
+unpack op = let (opi,op') = decode 6 op
                 syn       = getPackSyntax opi
             in opi : recArgs op' syn
   where

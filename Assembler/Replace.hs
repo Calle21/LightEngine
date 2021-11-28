@@ -1,8 +1,8 @@
 module Assembler.Replace where
 
+import Share
 import Types
 import Ubi
-import Util
 
 replace :: (FilePath, [[Token]], [[Token]]) -> ([[Token]], [[Token]])
 replace (filename, dat, text) = let locDataLabs = getLocLabs dat

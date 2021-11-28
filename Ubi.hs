@@ -13,6 +13,8 @@ module Ubi (
       , module System.Environment
       , module System.FilePath.Posix
       , module System.IO
+      , module Text.Regex.PCRE
+      , module Unsafe.Coerce
            ) where
 
 import Control.Monad
@@ -29,3 +31,5 @@ import System.Directory
 import System.Environment 
 import System.FilePath.Posix
 import System.IO 
+import Text.Regex.PCRE
+import Unsafe.Coerce

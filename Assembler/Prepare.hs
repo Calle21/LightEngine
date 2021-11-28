@@ -1,8 +1,8 @@
 module Assembler.Prepare where
 
+import Share
 import Types
 import Ubi
-import Util
 
 prepare :: (Int64, [Int64]) -> IO (RAM, Proc)
 prepare (main,ls) = do hSetBuffering stdout NoBuffering

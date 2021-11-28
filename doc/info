@@ -1,6 +1,4 @@
-Machine code:
-  5  bits > opcode
-  59 bits > args
+LEA (LightEngine Architecture) comes in many different 
 
 Registers:
   0-11  - temporary

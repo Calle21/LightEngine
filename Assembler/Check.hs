@@ -1,12 +1,12 @@
 module Assembler.Check (check) where
 
-import Assembler.OpInfo (getOpSyntax)
+import Assembler.OpInfo
+import Share
 import Types
 import Ubi
-import Util
 
-check :: (FilePath, RegList, [[Token]]) -> (FilePath, RegList, [[Token]])
-check (filename, regs, file) = (filename, regs, ch 1 file)
+check :: (FilePath, [[Token]]) -> (FilePath, [[Token]])
+check (filename, file) = (filename, ch 1 file)
   where
   ch :: Int -> [[Token]] -> [[Token]]
   ch line (x:xs) | isDataLine x || isLabLine x || isInstrLine x = ch (line + 1) xs
@@ -37,7 +37,7 @@ check (filename, regs, file) = (filename, regs, ch 1 file)
                           LB  -> case xs of
                                    (Name _:xs') -> xs'
                                    _            -> aerror filename line "Expected a name for lab"
-                          IM  -> case xs of
+                          IN  -> case xs of
                                    (INum _:xs') -> xs'
                                    _            -> aerror filename line "Expected an integer"
                           IA  -> case xs of

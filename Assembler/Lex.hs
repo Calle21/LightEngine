@@ -1,8 +1,8 @@
 module Assembler.Lex (lex') where
 
+import Share
 import Types
 import Ubi
-import Util
 
 lex' :: (FilePath, String) -> (FilePath, [[Token]])
 lex' (filename,s) = (filename, lexLines 1 $ lines s)
@@ -22,15 +22,16 @@ lex' (filename,s) = (filename, lexLines 1 $ lines s)
                                      in Str st : lexLine xs'
                               _   -> if nonPunct x
                                      then let (ts,xs') = span nonPunct (x:xs)
-                                              tok | arrowSyntax ts   = Arrow
-                                                  | glabSyntax ts    = Glab $ tail ts
-                                                  | inumSyntax ts    = INum $ read ts
-                                                  | llabSyntax ts    = Llab $ init ts
-                                                  | minusSyntax ts   = Minus
-                                                  | nameSyntax ts    = Name ts
-                                                  | plusSyntax ts    = Plus
-                                                  | spaceSyntax ts   = Space $ read $ init $ tail ts
-                                                  | otherwise        = aerror filename line ("Bad token : " ++ ts)
+                                              tok | arrowSyntax ts = Arrow
+                                                  | fnumSyntax ts  = FNum $ read ts
+                                                  | glabSyntax ts  = Glab $ tail ts
+                                                  | inumSyntax ts  = INum $ read ts
+                                                  | llabSyntax ts  = Llab $ init ts
+                                                  | minusSyntax ts = Minus
+                                                  | nameSyntax ts  = Name ts
+                                                  | plusSyntax ts  = Plus
+                                                  | spaceSyntax ts = Space $ read $ init $ tail ts
+                                                  | otherwise      = aerror filename line ("Bad token : " ++ ts)
                                           in tok : lexLine xs'
                                      else aerror filename line ("Illegal character : " ++ [x])
       where
@@ -48,7 +49,7 @@ lex' (filename,s) = (filename, lexLines 1 $ lines s)
   lexLines _ [] = []
       
 nonPunct :: Char -> Bool
-nonPunct c = labChar c || c == '@' || c == ':' || c == '|' || c == '$' || c == '-' || c == '>' || c == '+'
+nonPunct c = labChar c || c == '@' || c == ':' || c == '|' || c == '$' || c == '-' || c == '>' || c == '+' || c == '.'
 
 ws :: Char -> Bool
 ws c = c == ' ' || c == '\t'
@@ -60,20 +61,26 @@ labChar c | c >= 'a' && c <= 'z' = True
           | c == '_'             = True
           | otherwise            = False
 
+arrowSyntax, fnumSyntax,
+ glabSyntax, inumSyntax,
+  llabSyntax, minusSyntax,
+   nameSyntax, plusSyntax,
+    spaceSyntax :: String -> Bool
+
 arrowSyntax s = s == "->"
 
-glabSyntax s = not (null s) && nameSyntax (tail s) && head s == '@'
+fnumSyntax s = s =~ "^-?[0-9]+\\.[0-9]+$"
 
-inumSyntax s = not (null s) && unsignedSyntax (if head s == '-' then tail s else s)
+glabSyntax s = s =~ "^@[0-9a-zA-Z_]+$"
+
+inumSyntax s = s =~ "^-?[0-9]+$"
+
+llabSyntax s = s =~ "^[a-zA-Z0-9_]+:$"
 
 minusSyntax s = s == "-"
 
-nameSyntax s = not (null s) && all labChar s
-
-llabSyntax s = not (null s) && nameSyntax (init s) && last s == ':'
+nameSyntax s = s =~ "^[a-zA-Z_][a-zA-Z0-9]*$"
 
 plusSyntax s = s == "+"
 
-spaceSyntax s = not (null s) && head s == '|' && last s == '|' && unsignedSyntax (init $ tail s)
-
-unsignedSyntax s = not (null s) && all (\c -> c >= '0' && c <= '9') s
+spaceSyntax s = s =~ "^\\|[0-9]+\\|$"

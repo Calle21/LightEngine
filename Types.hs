@@ -8,19 +8,18 @@ type OpInfo = ([(String,ExeFunc)],[Syn],[Int64])
 
 type Proc = RAM
 
-type RegList = [(String,Int64)]
-
 type RAM = Array Int64 (IORef Int64)
 
 data Sig = Continue | Exit
 
 type SymTable = [(String,Int64)]
 
-data Syn = RG | IM | LB | PL | IA | SC
+data Syn = RG | IN | LB | PL | IA | SC
 
 data Token = Addr String
            | Arrow
            | Comma
+           | FNum Double
            | Glab String
            | INum Int64
            | Llab String

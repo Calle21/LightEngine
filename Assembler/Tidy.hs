@@ -1,12 +1,12 @@
 module Assembler.Tidy where
 
-import Assembler.OpInfo (getOpSyntax)
+import Assembler.OpInfo
+import Share
 import Types
 import Ubi
-import Util
 
-tidy :: (FilePath, RegList, [[Token]], [[Token]]) -> (FilePath, [[Token]], [[Token]])
-tidy (filename, regs, dat, text) = (filename, dat, rec text)
+tidy :: (FilePath, [[Token]], [[Token]]) -> (FilePath, [[Token]], [[Token]])
+tidy (filename, dat, text) = (filename, dat, rec text)
   where
   rec :: [[Token]] -> [[Token]]
   rec (x:xs) | isLabLine x = x : rec xs
@@ -19,7 +19,7 @@ tidy (filename, regs, dat, text) = (filename, dat, rec text)
                           RG -> case xs of
                                   (Name s:xs') -> case s `lookup` regs of
                                                     Just i -> Reg i : recArgs xs' ys
-                          IM -> head xs : recArgs (tail xs) ys
+                          IN -> head xs : recArgs (tail xs) ys
                           LB -> head xs : recArgs (tail xs) ys
                           IA -> case head xs of
                                   INum _ -> head xs : recArgs (tail xs) ys

@@ -1,45 +1,24 @@
 module Main where
 
-import Assembler.Check
-import Assembler.Clean
-import Assembler.Compact
-import Assembler.Concat
-import Assembler.GetLabs
-import Assembler.GetRegList
-import Assembler.Lex
-import Assembler.Prepare
-import Assembler.RemovePunct
-import Assembler.Replace
-import Assembler.Split
-import Assembler.Tidy
-import Execute.Execute
-import Types
-import Ubi
-import Util
+import System.Directory (listDirectory, doesDirectoryExist)
+import System.Environment (getArgs)
+import System.FilePath.Posix ((</>), takeExtension)
+
+import Compile.MakeLines (makeLines)
+
 
 main :: IO ()
-main = do [path, test] <- getArgs
-          dir          <- doesDirectoryExist path
-          sourcePaths  <- case dir of
-                           True  -> do contents <- listDir path
-                                       return $ filter (\p -> takeExtension p == ".s") contents
-                           False -> return [path]
-          strings     <- mapM readFile sourcePaths
-          let lexed        = map lex' (zip (map takeFileName sourcePaths) strings)
-              gotRegLists  = map getRegList lexed
-              checked      = map check gotRegLists
-              split'       = map split checked
-              withoutPunct = map removePunct split'
-              tidy'        = map tidy withoutPunct
-              replaced     = map replace tidy'
-              concat''     = concat' replaced
-              gotLabs      = getLabs concat''
-              cleaned      = clean gotLabs
-              compacted    = compact cleaned
-          (ram,proc) <- prepare compacted
-          case test of
-            "t" -> print cleaned
-            "r" -> execute ram proc
+main = do [target] <- fmap (\args -> if null args then ["."] else args) getArgs
+          files <- listRec target
+          mapM print files
+          return ()
 
-listDir :: FilePath -> IO [FilePath]
-listDir path = map (path </>) `fmap` listDirectory path
+listRec :: FilePath -> IO [(FilePath,String)]
+listRec path = do dir <- doesDirectoryExist path
+                  case dir of
+                    True  -> do contents <- fmap (map (path </>)) (listDirectory path)
+                                fmap concat $ mapM listRec contents
+                    False -> case takeExtension path of
+                               ".s" -> do contents <- readFile path
+                                          return [(path,contents)]
+                               _    -> return []

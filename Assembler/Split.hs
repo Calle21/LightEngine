@@ -1,9 +1,9 @@
 module Assembler.Split where
 
+import Share
 import Types
 import Ubi
-import Util
 
-split :: (FilePath, RegList, [[Token]]) -> (FilePath, RegList, [[Token]], [[Token]])
-split (filename, regs, file) = let (c,d) = partition isDataLine file
-                               in (filename, regs, c, d)
+split :: (FilePath, [[Token]]) -> (FilePath, [[Token]], [[Token]])
+split (filename, file) = let (b,c) = partition isDataLine file
+                         in (filename, b, c)

@@ -1,9 +1,9 @@
 module Assembler.OpInfo where
 
 import Execute.Operations
+import Share
 import Types
 import Ubi
-import Util
 
 getOpi :: String -> Int64
 getOpi s = rec 0 opInfo
@@ -51,46 +51,55 @@ getOpSyntax s = rec opInfo
     elem1 _  []          = False
   rec [] = Nothing
 
+dWrap :: (Double -> Double -> Double) -> Int64 -> Int64 -> Int64
+dWrap fn i0 i1 = unsafeCoerce $ unsafeCoerce i0 `fn` unsafeCoerce i1
+
 opInfo :: [OpInfo]
 opInfo = [([("not", regReg complement)
            ,("move", regReg id)]
            ,[RG,RG]
            ,[4,4])
          ,([("add", regRegReg (+))
-           ,("and", regRegReg (.&.))
+           ,("addf", regRegReg (dWrap (+)))
            ,("div", regRegReg div)
+           ,("divf", regRegReg (dWrap (/)))
            ,("mul", regRegReg (*))
+           ,("mulf", regRegReg (dWrap (*)))
+           ,("sub", regRegReg (-))
+           ,("subf", regRegReg (dWrap (-)))
+           ,("and", regRegReg (.&.))
            ,("or", regRegReg (.|.))
            ,("sl", regRegReg (\i0 i1 -> i0 `shiftL` fromIntegral i1))
            ,("sr", regRegReg (\i0 i1 -> fromIntegral $ (fromIntegral i0 :: Word64) `shiftR` fromIntegral i1))
            ,("sra", regRegReg (\i0 i1 -> i0 `shiftR` fromIntegral i1))
-           ,("sub", regRegReg (-))
            ,("xor", regRegReg xor)]
            ,[RG,RG,RG]
            ,[4,4,4])
-         ,([("li",li)],[IA,RG],[55,4])
+         ,([("li",li)],[IA,RG],[54,4])
          ,([("addi", regImmDes (+))
+           ,("muli", regImmDes (*))
+           ,("divi", regImmDes div)
            ,("andi", regImmDes (.&.))
            ,("ori", regImmDes (.|.))
            ,("sli", regImmDes (\i0 i1 -> i0 `shiftL` fromIntegral i1))
            ,("sri", regImmDes (\i0 i1 -> fromIntegral $ (fromIntegral i0 :: Word64) `shiftR` fromIntegral i1))
            ,("srai", regImmDes (\i0 i1 -> i0 `shiftR` fromIntegral i1))
            ,("xori", regImmDes xor)]
-           ,[RG,IM,RG]
-           ,[4,51,4])
-         ,([("lw", lw)],[PL,RG],[4,51,4])
-         ,([("sw", sw)],[RG,PL],[4,4,51])
-         ,([("b",b)],[LB],[59])
+           ,[RG,IN,RG]
+           ,[4,50,4])
+         ,([("lw", lw)],[PL,RG],[4,50,4])
+         ,([("sw", sw)],[RG,PL],[4,4,50])
+         ,([("b",b)],[LB],[58])
          ,([("br",br)],[RG],[4])
          ,([("beq", bRegReg (==))
            ,("bgt", bRegReg (<))
            ,("bge", bRegReg (<=))]
            ,[RG,RG,LB]
-           ,[4,4,51])
+           ,[4,4,50])
          ,([("beqi", bRegImm (==))
            ,("bgti", bRegImm (<))
            ,("bgei", bRegImm (<=))]
-           ,[RG,IM,LB]
-           ,[4,16,39])
+           ,[RG,IN,LB]
+           ,[4,16,38])
          ,([("exit",exit)],[],[])
-         ,([("syscall",syscall)],[SC],[59])]
+         ,([("syscall",syscall)],[SC],[58])]

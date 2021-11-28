@@ -1,8 +1,8 @@
 module Assembler.GetLabs where
 
+import Share
 import Types
 import Ubi
-import Util
 
 getLabs :: ([[Token]],[[Token]]) -> (SymTable, [Token], [[Token]])
 getLabs (dat, text) = let (dataLabs,dat',dataSize) = getDataLabs [] [] 1024 dat
@@ -14,6 +14,7 @@ getLabs (dat, text) = let (dataLabs,dat',dataSize) = getDataLabs [] [] 1024 dat
                                                   INum i  -> getDataLabs (d : acc0) ((s,size) : acc1) (size + 1) xs
                                                   Space i -> getDataLabs (d : acc0) ((s,size) : acc1) (size + i) xs
                                                   Str s'  -> getDataLabs (d : acc0) ((s,size) : acc1) (size + fromIntegral (length s')) xs
+                                                  FNum f  -> getDataLabs (d : acc0) ((s,size) : acc1) (size + 1) xs
   getDataLabs acc0 acc1 size []               = (acc1,reverse acc0,size)
   getTextLabs :: [[Token]] -> SymTable -> Int64 -> [[Token]] -> (SymTable,[[Token]])
   getTextLabs acc0 acc1 size (x:xs) = case x of

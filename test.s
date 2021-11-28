@@ -1,8 +1,9 @@
-test:       "Please enter a number: "
-mem:        22
-poi:        22
+fl:         3.2
 
 @main
-        li   test -> r0
-        syscall pString
+        li   fl -> r0
+        lw   r0 -> r0
+        syscall pFloat
+        li   10 -> r0
+        syscall pChar
         exit

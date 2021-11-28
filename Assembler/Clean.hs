@@ -1,9 +1,9 @@
 module Assembler.Clean where
 
-import Assembler.OpInfo (getOpi)
+import Assembler.OpInfo
+import Share
 import Types
 import Ubi
-import Util
 
 clean :: (SymTable, [Token], [[Token]]) -> (Int64, [Int64], [[Int64]])
 clean (sym,dat,text) = let dat'  = replicate 1024 0 ++ cleanData dat
@@ -16,6 +16,7 @@ clean (sym,dat,text) = let dat'  = replicate 1024 0 ++ cleanData dat
   cleanData (INum i:xs)  = i : cleanData xs
   cleanData (Space i:xs) = replicate (fromIntegral i) 0 ++ cleanData xs
   cleanData (Str s:xs)   = map (fromIntegral . ord) s ++ cleanData xs
+  cleanData (FNum f:xs)  = unsafeCoerce f : cleanData xs
   cleanData []           = []
   cleanText :: Int64 -> [[Token]] -> [[Int64]]
   cleanText pos ((Name s:args):xs) = (getOpi s : cleanArgs args) : cleanText (pos + 1) xs
