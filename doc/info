@@ -1,13 +1,47 @@
-LEA (LightEngine Architecture) comes in many different 
+LEA is a 1-bit architecture. That is, every single bit has it's own address. The addresses in turn may vary in length depending on the memory capacity of the computer.
 
-Registers:
-  0-11  - temporary
-  12    - sp
-  13    - link
-  14    - fetch
-  15    - ic
+LEA comes with a simple built in memory management system. It's a simple mark and sweep algorithm. More info on that later
 
-Instruction types
+The memory management system:
+Every object on a LEA computer is part a doubly linked list of allocated objects. An allocated object has five (?) parts. The first part is a single bit telling the computer if it should be freed or remain allocated. More information on how the marking is done later. The second part is an address pointing to the previous object. That is, the object that in memory is allocated "behind" the current object. The object with an address closest to but smaller than the current object. The third part is an address pointing to the next object. The fourth part is an address pointing to the end of the current object. That is, the address right after the object ends. So, it would point to the bit right after the current object. The fifth part is the object itself. A bool for example, would simply just occupy a single bit after the four first parts, an array of bool would probably occupy some more memory. The information that goes with an allocated object is expected to be used by high-level programs.
+
+The marking works as follows. Allocation begins at address 0. As objects are allocated they are always allocated after the latest allocated object. Sooner or later the end of memory is reached, and then the algorithm has to start over from the beginning of the memory. Most likely there are some objects that has been allocated but are no longer used. So, when wrapping around, an unmark, mark and unlink procedure takes place. First every object is "un-marked", that is, marked for deletion (un-linking). Then, a data-structure containing all the objects currently in use, is recursively travelled until all the objects in it has been marked for preservation. After that the linked list of allocated objects is traversed, and every object that is not marked for preservation is taken away. That should free up enough memory to allocate more objects. If not, a bigger memory is needed, or more efficient programs.
+
+If some other memory management algorithm is needed, a large chunk of space can be allocated, and custom algorithms could be written and applied
+
+In order for the memory management to work, the algorithms must have some knowledge of some basic types. These types has to be baked into the architecture itself, they are:
+
+0 The bit vector. Size of the bitvector is evident when looking at the allocation info (end of object). Operations such as bit-shift, addition and so forth can be done on a bit-vector
+
+1 The array. A simple array containing elements of the same type. Length of the array is evident given the allocation info. This type necessarily comes with an extra identifier to signify the type that it contains. 
+
+2 The struct. It's like an array, but every element can be of any type. So a set of type signatures is necessary to accompany the struct identifier.
+
+3 Function???
+
+4 Machine-code???
+
+The instruction counter is located at the beginning of memory. Things have to be worked on directly on memory anyways, so why make it complicated and add extra registers?
+
+Boolean registers
+  r0-r15 - 
+
+
+  fst - points to the object with lowest address
+  rec - most recently allocated object. The search for memory for new objects begins after this object
+  os  - The tree structure containing all objects currently in use. It ought to be a folder
+
+
+
+  0-3  - miscellaneous
+  4    - sp
+  5    - link
+  6    - fetch
+  7    - ic
+
+Instructions
+  0 - add (src0,src1,dest,addition,
+
   4,4 : not, move
 
   4,4,4 : add, and, div, mul, or, sl, sr, sra, sub, xor

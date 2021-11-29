@@ -1,0 +1,3 @@
+LEA (LightEngine Architecture) is a slice based computer. Every single transistor has its' own address, and rather than working on the registers, the computer works on slices of memory, which in turn consists of two addresses
+
+
